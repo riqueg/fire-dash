@@ -1,0 +1,7 @@
+# Ignorar tudo exceto estes arquivos
+*
+!index.html
+!.gitignore
+!deploy.ps1
+!setup.ps1
+!GUIA-CONFIGURACAO.md
