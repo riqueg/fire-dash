@@ -3635,7 +3635,7 @@ function checkChannelCompleteness(yr) {
   const allDates = Object.keys(daily).filter(d => d.length === 10);
   if (!allDates.length) return null;
   const lastOverall = allDates.sort((a, b) => parseDate(b) - parseDate(a))[0];
-  const CANAIS = { salao: 'Salão', ifood: 'iFood', food99: '99food', keeta: 'Keeta' };
+  const CANAIS = { salao: 'Salão', ifood: 'iFood', food99: '99food' };
   const gaps = [];
   for (const canal in CANAIS) {
     const comValor = allDates.filter(d => (daily[d][canal] || 0) > 0).sort((a, b) => parseDate(b) - parseDate(a));
@@ -7215,7 +7215,7 @@ function checkChannelCompleteness(yr) {
   const allDates = Object.keys(daily).filter(d => d.length === 10);
   if (!allDates.length) return null;
   const lastOverall = allDates.sort((a, b) => parseDate(b) - parseDate(a))[0];
-  const CANAIS = { salao: 'Salão', ifood: 'iFood', food99: '99food', keeta: 'Keeta' };
+  const CANAIS = { salao: 'Salão', ifood: 'iFood', food99: '99food' };
   const gaps = [];
   for (const canal in CANAIS) {
     const comValor = allDates.filter(d => (daily[d][canal] || 0) > 0).sort((a, b) => parseDate(b) - parseDate(a));
