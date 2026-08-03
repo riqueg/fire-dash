@@ -2803,10 +2803,13 @@
 
   </div>
 
-  <!-- ── TICKET MÉDIO MÊS A MÊS ───────────────────────────────────── -->
+  <!-- ── CUPONS & TICKET MÉDIO ─────────────────────────────────────── -->
   <div class="card" style="margin-bottom:20px">
-    <div class="card-title"><span>🎫 Ticket Médio por Canal — 2026 vs 2025</span></div>
-    <div class="chart-wrap" style="height:260px"><canvas id="fuTicketChart"></canvas></div>
+    <div class="card-title"><span>📊 Cupons &amp; Ticket Médio</span></div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Cupons</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="fuCouponFuChart"></canvas></div>
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin:16px 0 8px">Ticket Médio</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="fuTicketFuChart"></canvas></div>
   </div>
 
 
@@ -5798,7 +5801,8 @@ function _fuDoPrint() {
     /* Gráficos menores para caber bem */
     .chart-wrap { height:150px!important; overflow:hidden!important; }
     .chart-wrap canvas { height:100%!important; }
-    #fuTicketChart { height:180px!important; }
+    #fuCouponFuChart { height:150px!important; }
+    #fuTicketFuChart { height:150px!important; }
     #fuCatChart    { height:220px!important; }
     #fuSSSChart    { height:150px!important; }
 
@@ -6614,47 +6618,67 @@ function renderFollowup() {
   const tot26 = CAT_MONTHS.map((_,mi) => activeCats.reduce((s,c)=>s+cat26[c][mi],0));
 
   // ── Ticket Médio Geral — mês a mês 2026 vs 2025 ──────────────────
-  destroyChart('fuTicketChart');
+  destroyChart('fuCouponFuChart');
+  destroyChart('fuTicketFuChart');
   {
     const tkMonths = ['01','02','03','04','05','06','07'];
     const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul'}[m]));
-    const tk26 = tkMonths.map(m => {
-      const d = rm26[m]||{};
-      const cups = (d.salao_cups||0)+(d.ifood_cups||0);
-      const val  = (d.salao_val||0)+(d.ifood_val||0);
-      return cups>0 ? round2(val/cups) : null;
-    });
-    const tk25 = tkMonths.map(m => {
-      const d = rm25[m]||{};
-      const cups = (d.salao_cups||0)+(d.ifood_cups||0);
-      const val  = (d.salao_val||0)+(d.ifood_val||0);
-      return cups>0 ? round2(val/cups) : null;
+    const dlTop = { anchor:'end', align:'end', offset:2, clamp:true,
+      backgroundColor:'rgba(255,255,255,0.82)', borderRadius:3,
+      padding:{top:2,bottom:2,left:4,right:4} };
+
+    // ── Cupons ──
+    const cups26 = tkMonths.map(m => rm26[m]?.total_cups || null);
+    const cups25 = tkMonths.map(m => rm25[m]?.total_cups || null);
+    const cupEl = document.getElementById('fuCouponFuChart');
+    if (cupEl) charts['fuCouponFuChart'] = new Chart(cupEl, {
+      type: 'bar',
+      data: { labels: tkLabels, datasets: [
+        { label:'Cupons 2025', data:cups25,
+          backgroundColor:'rgba(76,201,240,0.28)', borderColor:'rgba(76,201,240,0.5)',
+          borderWidth:1, borderRadius:4,
+          barPercentage:0.85, categoryPercentage:0.55, stack:'prev',
+          datalabels:{ ...dlTop, display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
+            formatter: v => v ? v.toLocaleString('pt-BR') : '',
+            color:'#6b7280', font:{size:9,weight:'700'} } },
+        { label:'Cupons 2026', data:cups26,
+          backgroundColor:'rgba(76,201,240,0.85)', borderColor:'#4cc9f0',
+          borderWidth:0, borderRadius:4,
+          barPercentage:0.85, categoryPercentage:0.55, stack:'cur',
+          datalabels:{ ...dlTop, display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
+            formatter: v => v ? v.toLocaleString('pt-BR') : '',
+            color:'#1a1a2e', font:{size:10,weight:'700'} } }
+      ]},
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        layout:{ padding:{ top:36, right:20, bottom:10, left:10 } },
+        plugins:{ legend:{ position:'top', labels:{ boxWidth:14, font:{size:11} } }, datalabels:{} },
+        scales:{ x:{ grid:{ display:false }, ticks:{ font:{size:11} } }, y:{ display:false } }
+      },
+      plugins:[ChartDataLabels]
     });
 
-    const tkEl = document.getElementById('fuTicketChart');
-    if (tkEl) charts['fuTicketChart'] = new Chart(tkEl, {
+    // ── Ticket Médio ──
+    const tk26 = tkMonths.map(m => rm26[m]?.ticket || null);
+    const tk25 = tkMonths.map(m => rm25[m]?.ticket || null);
+    const tkEl = document.getElementById('fuTicketFuChart');
+    if (tkEl) charts['fuTicketFuChart'] = new Chart(tkEl, {
       type: 'bar',
       data: { labels: tkLabels, datasets: [
         { label:'Ticket 2025', data:tk25,
-          backgroundColor:'rgba(224,58,14,0.28)', borderColor:'rgba(224,58,14,0.45)',
+          backgroundColor:'rgba(255,209,102,0.3)', borderColor:'rgba(255,209,102,0.6)',
           borderWidth:1, borderRadius:4,
           barPercentage:0.85, categoryPercentage:0.55, stack:'prev',
-          datalabels:{ display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
-            formatter: v => v ? 'R$'+fmt(v) : '',
-            anchor:'end', align:'end', offset:2, clamp:true,
-            color:'#6b7280', font:{size:9,weight:'700'},
-            backgroundColor:'rgba(255,255,255,0.75)', borderRadius:3,
-            padding:{top:2,bottom:2,left:4,right:4} } },
+          datalabels:{ ...dlTop, display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
+            formatter: v => v ? 'R$'+fmt(v,0) : '',
+            color:'#6b7280', font:{size:9,weight:'700'} } },
         { label:'Ticket 2026', data:tk26,
-          backgroundColor:'rgba(224,58,14,0.88)', borderColor:'#e03a0e',
+          backgroundColor:'rgba(255,209,102,0.95)', borderColor:'#ffd166',
           borderWidth:0, borderRadius:4,
           barPercentage:0.85, categoryPercentage:0.55, stack:'cur',
-          datalabels:{ display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
-            formatter: v => v ? 'R$'+fmt(v) : '',
-            anchor:'end', align:'end', offset:2, clamp:true,
-            color:'#1a1a2e', font:{size:10,weight:'700'},
-            backgroundColor:'rgba(255,255,255,0.82)', borderRadius:3,
-            padding:{top:2,bottom:2,left:4,right:4} } }
+          datalabels:{ ...dlTop, display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
+            formatter: v => v ? 'R$'+fmt(v,0) : '',
+            color:'#1a1a2e', font:{size:10,weight:'700'} } }
       ]},
       options: {
         responsive:true, maintainAspectRatio:false,
@@ -6664,10 +6688,7 @@ function renderFollowup() {
           tooltip:{ callbacks:{ label: ctx => ` ${ctx.dataset.label}: R$ ${fmt(ctx.raw,2)}` } },
           datalabels:{}
         },
-        scales:{
-          x:{ grid:{ display:false }, ticks:{ font:{size:11} } },
-          y:{ display:false }
-        }
+        scales:{ x:{ grid:{ display:false }, ticks:{ font:{size:11} } }, y:{ display:false } }
       },
       plugins:[ChartDataLabels]
     });
@@ -9311,7 +9332,8 @@ function _fuDoPrint() {
     /* Gráficos menores para caber bem */
     .chart-wrap { height:150px!important; overflow:hidden!important; }
     .chart-wrap canvas { height:100%!important; }
-    #fuTicketChart { height:180px!important; }
+    #fuCouponFuChart { height:150px!important; }
+    #fuTicketFuChart { height:150px!important; }
     #fuCatChart    { height:220px!important; }
     #fuSSSChart    { height:150px!important; }
 
@@ -10127,47 +10149,67 @@ function renderFollowup() {
   const tot26 = CAT_MONTHS.map((_,mi) => activeCats.reduce((s,c)=>s+cat26[c][mi],0));
 
   // ── Ticket Médio Geral — mês a mês 2026 vs 2025 ──────────────────
-  destroyChart('fuTicketChart');
+  destroyChart('fuCouponFuChart');
+  destroyChart('fuTicketFuChart');
   {
     const tkMonths = ['01','02','03','04','05','06','07'];
     const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul'}[m]));
-    const tk26 = tkMonths.map(m => {
-      const d = rm26[m]||{};
-      const cups = (d.salao_cups||0)+(d.ifood_cups||0);
-      const val  = (d.salao_val||0)+(d.ifood_val||0);
-      return cups>0 ? round2(val/cups) : null;
-    });
-    const tk25 = tkMonths.map(m => {
-      const d = rm25[m]||{};
-      const cups = (d.salao_cups||0)+(d.ifood_cups||0);
-      const val  = (d.salao_val||0)+(d.ifood_val||0);
-      return cups>0 ? round2(val/cups) : null;
+    const dlTop = { anchor:'end', align:'end', offset:2, clamp:true,
+      backgroundColor:'rgba(255,255,255,0.82)', borderRadius:3,
+      padding:{top:2,bottom:2,left:4,right:4} };
+
+    // ── Cupons ──
+    const cups26 = tkMonths.map(m => rm26[m]?.total_cups || null);
+    const cups25 = tkMonths.map(m => rm25[m]?.total_cups || null);
+    const cupEl = document.getElementById('fuCouponFuChart');
+    if (cupEl) charts['fuCouponFuChart'] = new Chart(cupEl, {
+      type: 'bar',
+      data: { labels: tkLabels, datasets: [
+        { label:'Cupons 2025', data:cups25,
+          backgroundColor:'rgba(76,201,240,0.28)', borderColor:'rgba(76,201,240,0.5)',
+          borderWidth:1, borderRadius:4,
+          barPercentage:0.85, categoryPercentage:0.55, stack:'prev',
+          datalabels:{ ...dlTop, display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
+            formatter: v => v ? v.toLocaleString('pt-BR') : '',
+            color:'#6b7280', font:{size:9,weight:'700'} } },
+        { label:'Cupons 2026', data:cups26,
+          backgroundColor:'rgba(76,201,240,0.85)', borderColor:'#4cc9f0',
+          borderWidth:0, borderRadius:4,
+          barPercentage:0.85, categoryPercentage:0.55, stack:'cur',
+          datalabels:{ ...dlTop, display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
+            formatter: v => v ? v.toLocaleString('pt-BR') : '',
+            color:'#1a1a2e', font:{size:10,weight:'700'} } }
+      ]},
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        layout:{ padding:{ top:36, right:20, bottom:10, left:10 } },
+        plugins:{ legend:{ position:'top', labels:{ boxWidth:14, font:{size:11} } }, datalabels:{} },
+        scales:{ x:{ grid:{ display:false }, ticks:{ font:{size:11} } }, y:{ display:false } }
+      },
+      plugins:[ChartDataLabels]
     });
 
-    const tkEl = document.getElementById('fuTicketChart');
-    if (tkEl) charts['fuTicketChart'] = new Chart(tkEl, {
+    // ── Ticket Médio ──
+    const tk26 = tkMonths.map(m => rm26[m]?.ticket || null);
+    const tk25 = tkMonths.map(m => rm25[m]?.ticket || null);
+    const tkEl = document.getElementById('fuTicketFuChart');
+    if (tkEl) charts['fuTicketFuChart'] = new Chart(tkEl, {
       type: 'bar',
       data: { labels: tkLabels, datasets: [
         { label:'Ticket 2025', data:tk25,
-          backgroundColor:'rgba(224,58,14,0.28)', borderColor:'rgba(224,58,14,0.45)',
+          backgroundColor:'rgba(255,209,102,0.3)', borderColor:'rgba(255,209,102,0.6)',
           borderWidth:1, borderRadius:4,
           barPercentage:0.85, categoryPercentage:0.55, stack:'prev',
-          datalabels:{ display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
-            formatter: v => v ? 'R$'+fmt(v) : '',
-            anchor:'end', align:'end', offset:2, clamp:true,
-            color:'#6b7280', font:{size:9,weight:'700'},
-            backgroundColor:'rgba(255,255,255,0.75)', borderRadius:3,
-            padding:{top:2,bottom:2,left:4,right:4} } },
+          datalabels:{ ...dlTop, display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
+            formatter: v => v ? 'R$'+fmt(v,0) : '',
+            color:'#6b7280', font:{size:9,weight:'700'} } },
         { label:'Ticket 2026', data:tk26,
-          backgroundColor:'rgba(224,58,14,0.88)', borderColor:'#e03a0e',
+          backgroundColor:'rgba(255,209,102,0.95)', borderColor:'#ffd166',
           borderWidth:0, borderRadius:4,
           barPercentage:0.85, categoryPercentage:0.55, stack:'cur',
-          datalabels:{ display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
-            formatter: v => v ? 'R$'+fmt(v) : '',
-            anchor:'end', align:'end', offset:2, clamp:true,
-            color:'#1a1a2e', font:{size:10,weight:'700'},
-            backgroundColor:'rgba(255,255,255,0.82)', borderRadius:3,
-            padding:{top:2,bottom:2,left:4,right:4} } }
+          datalabels:{ ...dlTop, display: ctx => ctx.dataset.data[ctx.dataIndex]!=null,
+            formatter: v => v ? 'R$'+fmt(v,0) : '',
+            color:'#1a1a2e', font:{size:10,weight:'700'} } }
       ]},
       options: {
         responsive:true, maintainAspectRatio:false,
@@ -10177,10 +10219,7 @@ function renderFollowup() {
           tooltip:{ callbacks:{ label: ctx => ` ${ctx.dataset.label}: R$ ${fmt(ctx.raw,2)}` } },
           datalabels:{}
         },
-        scales:{
-          x:{ grid:{ display:false }, ticks:{ font:{size:11} } },
-          y:{ display:false }
-        }
+        scales:{ x:{ grid:{ display:false }, ticks:{ font:{size:11} } }, y:{ display:false } }
       },
       plugins:[ChartDataLabels]
     });
