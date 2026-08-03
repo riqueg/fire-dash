@@ -6616,8 +6616,8 @@ function renderFollowup() {
   // ── Ticket Médio Geral — mês a mês 2026 vs 2025 ──────────────────
   destroyChart('fuTicketChart');
   {
-    const tkMonths = ['01','02','03','04','05','06'];
-    const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun'}[m]));
+    const tkMonths = ['01','02','03','04','05','06','07'];
+    const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul'}[m]));
     const tk26 = tkMonths.map(m => {
       const d = rm26[m]||{};
       const cups = (d.salao_cups||0)+(d.ifood_cups||0);
@@ -10129,8 +10129,8 @@ function renderFollowup() {
   // ── Ticket Médio Geral — mês a mês 2026 vs 2025 ──────────────────
   destroyChart('fuTicketChart');
   {
-    const tkMonths = ['01','02','03','04','05','06'];
-    const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun'}[m]));
+    const tkMonths = ['01','02','03','04','05','06','07'];
+    const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul'}[m]));
     const tk26 = tkMonths.map(m => {
       const d = rm26[m]||{};
       const cups = (d.salao_cups||0)+(d.ifood_cups||0);
