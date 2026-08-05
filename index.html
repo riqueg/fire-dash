@@ -4468,7 +4468,6 @@ function renderMixAuv() {
   const opCur  = ALL_MN.map(m => rmCur[m]?.op_days || 0);
   const op25   = ALL_MN.map(m => rm25[m]?.op_days  || 0);
   const dimCur = ALL_MN.map((m, i) => {
-    if (m === '07' && activeYear === '2026' && (rmCur[m]?.op_days || 0) > 0) return rmCur[m].op_days;
     return new Date(parseInt(activeYear), parseInt(m), 0).getDate();
   });
   const dim25  = ALL_MN.map(m => new Date(2025, parseInt(m), 0).getDate());
@@ -4817,6 +4816,14 @@ function renderMixAuv() {
     [totCur, tot25].forEach(tot => {
       Object.keys(tot).forEach(m => { tot[m] = { [lbl]: tot[m]['Burger'] || 0 }; });
     });
+    if (activeYear === '2026' && plataforma === 'combo') {
+      const COMBO_CANAL_2026 = {'07':{'salao':107,'delivery':202,'total':309}};
+      ALL_MN.forEach(m => {
+        const cq = COMBO_CANAL_2026[m]; if (!cq) return;
+        const v = canal === 'salao' ? cq.salao : canal === 'delivery' ? cq.delivery : cq.total;
+        totCur[m] = { [lbl]: v };
+      });
+    }
   }
 
   datasets = makeDS(subcats, subColors, totCur, tot25);
@@ -7999,7 +8006,6 @@ function renderMixAuv() {
   const opCur  = ALL_MN.map(m => rmCur[m]?.op_days || 0);
   const op25   = ALL_MN.map(m => rm25[m]?.op_days  || 0);
   const dimCur = ALL_MN.map((m, i) => {
-    if (m === '07' && activeYear === '2026' && (rmCur[m]?.op_days || 0) > 0) return rmCur[m].op_days;
     return new Date(parseInt(activeYear), parseInt(m), 0).getDate();
   });
   const dim25  = ALL_MN.map(m => new Date(2025, parseInt(m), 0).getDate());
@@ -8348,6 +8354,14 @@ function renderMixAuv() {
     [totCur, tot25].forEach(tot => {
       Object.keys(tot).forEach(m => { tot[m] = { [lbl]: tot[m]['Burger'] || 0 }; });
     });
+    if (activeYear === '2026' && plataforma === 'combo') {
+      const COMBO_CANAL_2026 = {'07':{'salao':107,'delivery':202,'total':309}};
+      ALL_MN.forEach(m => {
+        const cq = COMBO_CANAL_2026[m]; if (!cq) return;
+        const v = canal === 'salao' ? cq.salao : canal === 'delivery' ? cq.delivery : cq.total;
+        totCur[m] = { [lbl]: v };
+      });
+    }
   }
 
   datasets = makeDS(subcats, subColors, totCur, tot25);
