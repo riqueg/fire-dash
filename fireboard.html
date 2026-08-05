@@ -248,8 +248,28 @@
     font-weight:700;
     background:var(--char-700);
     color:var(--ember);
-    width:26px;
+    width:40px;
   }
+  table.daily td.dia .wd{
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-size:8px;
+    font-weight:600;
+    color:var(--cream-dim);
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+  }
+  .toggle-segunda{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    color:var(--cream-dim);
+    font-weight:600;
+    margin:-6px 0 14px 0;
+    cursor:pointer;
+  }
+  .toggle-segunda input{width:auto; accent-color:var(--ember);}
   table.daily td input{
     width:72px; padding:3px 4px; text-align:center; border:none; background:transparent;
     font-size:11.5px; border-radius:4px;
@@ -367,6 +387,10 @@
   <!-- ============ VENDAS DIÁRIAS ============ -->
   <section>
     <div class="sec-title">Vendas Delivery — Dia a Dia</div>
+    <label class="toggle-segunda">
+      <input type="checkbox" id="chkOcultarSegunda">
+      Loja fechada às segundas — ocultar linha
+    </label>
     <div class="board-body">
       <div class="halves" id="halvesContainer"><!-- gerado via JS --></div>
       <div class="sidebar" id="sidebarExtra"><!-- gerado via JS --></div>
@@ -436,6 +460,7 @@ function defaultData(){
   }
   return {
     mesRef:"", metaMensal:"", metaSalaoGeral:"", metaDeliveryGeral:"",
+    ocultarSegundas:false,
     days: days,
     auv: [
       {produto:"", meta:"", s1:"", s2:"", s3:"", s4:""},
@@ -561,12 +586,44 @@ function fmtPct(n){
 /* =========================================================
    TABELA DE METAS GERAIS
    ========================================================= */
+const WEEKDAYS_ABBR = ["dom","seg","ter","qua","qui","sex","sáb"];
+function dateForDay(day){
+  if(!DATA.mesRef) return null;
+  const [y, m] = DATA.mesRef.split("-").map(Number);
+  if(!y || !m) return null;
+  const date = new Date(y, m-1, day);
+  if(date.getMonth() !== m-1) return null; // dia nao existe nesse mes (ex: 30/31 fev)
+  return date;
+}
+function weekdayAbbr(day){
+  const date = dateForDay(day);
+  return date ? WEEKDAYS_ABBR[date.getDay()] : "";
+}
+function isMonday(day){
+  const date = dateForDay(day);
+  return date ? date.getDay() === 1 : false;
+}
+
 function bindTopFields(){
   const map = {mesRef:"mesRef", metaMensal:"metaMensal", metaSalaoGeral:"metaSalaoGeral", metaDeliveryGeral:"metaDeliveryGeral"};
   Object.entries(map).forEach(([key, id])=>{
     const el = document.getElementById(id);
     el.value = DATA[key];
-    el.addEventListener("input", ()=>{ DATA[key] = el.value; save(); });
+    el.addEventListener("input", ()=>{
+      DATA[key] = el.value;
+      save();
+      if(key === "mesRef") buildDailyTables();
+    });
+  });
+}
+
+function bindOcultarSegunda(){
+  const chk = document.getElementById("chkOcultarSegunda");
+  chk.checked = !!DATA.ocultarSegundas;
+  chk.addEventListener("change", ()=>{
+    DATA.ocultarSegundas = chk.checked;
+    save();
+    buildDailyTables();
   });
 }
 
@@ -613,10 +670,12 @@ function buildDailyHalf(startDay, endDay, label){
   const tbody = table.querySelector("tbody");
 
   for(let d=startDay; d<=endDay; d++){
+    if(DATA.ocultarSegundas && isMonday(d)) continue;
     const row = DATA.days[d-1];
+    const wd = weekdayAbbr(d);
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="dia">${d}</td>
+      <td class="dia">${d}${wd ? `<span class="wd">${wd}</span>` : ""}</td>
       <td><input type="number" step="0.01" data-day="${d}" data-field="metaTotal" value="${row.metaTotal}"></td>
       <td><input type="number" step="0.01" data-day="${d}" data-field="metaSalao" value="${row.metaSalao}"></td>
       <td><input type="number" step="0.01" data-day="${d}" data-field="metaDelivery" value="${row.metaDelivery}"></td>
@@ -694,6 +753,7 @@ function recalcBlockTotals(wrap){
   const start = parseInt(wrap.dataset.start), end = parseInt(wrap.dataset.end);
   let metaSum = 0, realSum = 0;
   for(let d=start; d<=end; d++){
+    if(DATA.ocultarSegundas && isMonday(d)) continue;
     metaSum += num(DATA.days[d-1].metaTotal);
     realSum += num(DATA.days[d-1].realTotal);
   }
@@ -912,6 +972,7 @@ function exportToExcel(){
    ========================================================= */
 function renderAll(){
   bindTopFields();
+  bindOcultarSegunda();
   bindDeliveryTable();
   buildDailyTables();
   buildSidebar();
