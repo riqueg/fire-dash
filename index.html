@@ -4390,12 +4390,14 @@ function renderMixAuv() {
     if (plataforma === 'a_lacarte') return !isPromo;
     if (plataforma === 'combo') {
       if (!isPromo || !n.includes('combo')) return false;
+      if (n.includes('salão') || n.includes('salao')) return false;
       if (tamanho === '100g' && n.includes('140')) return false;
       if (tamanho === '140g' && !n.includes('140')) return false;
       return true;
     }
     if (plataforma === 'familia') {
       if (!isPromo || !n.includes('4 por')) return false;
+      if (n.includes('salão') || n.includes('salao')) return false;
       if (tamanho === '100g' && n.includes('140')) return false;
       if (tamanho === '140g' && !n.includes('140')) return false;
       return true;
@@ -4413,6 +4415,21 @@ function renderMixAuv() {
   // getChanRatio(name, p): usa channel_products para ter salao/ifood/food99 corretos.
   // cplug contem salao + delivery, entao salao = channel_products[name].salao
   const getChanRatio = (name, p, monthKey) => {
+    // Combo/Família/2x1 são exclusivos do delivery
+    if (['combo','2x1','familia'].includes(plataforma)) {
+      if (canal === 'salao') return 0;
+      if (canal === 'all') {
+        const cp2 = (RAW.channel_products || {})[name] || {};
+        const ifd2 = cp2.ifood||0, f992 = cp2.food99||0, kee2 = cp2.keeta||0, sal2 = cp2.salao||0;
+        const den2 = sal2+ifd2+f992+kee2;
+        if (!den2) {
+          const rm2 = monthKey ? (getRM()[monthKey]||{}) : {};
+          const rI2=rm2.ifood_val||0,rF2=rm2.food99_val||0,rK2=rm2.keeta_val||0,rS2=rm2.salao_val||0;
+          const rD2=rS2+rI2+rF2+rK2; return rD2 ? (rI2+rF2+rK2)/rD2 : 1;
+        }
+        return (ifd2+f992+kee2)/den2;
+      }
+    }
     if (canal === 'all') return 1;
     const cp  = (RAW.channel_products || {})[name] || {};
     const sal = cp.salao  || 0;
@@ -4847,7 +4864,7 @@ function renderMixAuv() {
       const COMBO_CANAL_2026 = {'07':{'salao':107,'delivery':202,'total':309}};
       ALL_MN.forEach(m => {
         const cq = COMBO_CANAL_2026[m]; if (!cq) return;
-        const v = canal === 'salao' ? cq.salao : canal === 'delivery' ? cq.delivery : cq.total;
+        const v = canal === 'salao' ? 0 : cq.delivery;
         totCur[m] = { [lbl]: v };
       });
     }
@@ -7931,12 +7948,14 @@ function renderMixAuv() {
     if (plataforma === 'a_lacarte') return !isPromo;
     if (plataforma === 'combo') {
       if (!isPromo || !n.includes('combo')) return false;
+      if (n.includes('salão') || n.includes('salao')) return false;
       if (tamanho === '100g' && n.includes('140')) return false;
       if (tamanho === '140g' && !n.includes('140')) return false;
       return true;
     }
     if (plataforma === 'familia') {
       if (!isPromo || !n.includes('4 por')) return false;
+      if (n.includes('salão') || n.includes('salao')) return false;
       if (tamanho === '100g' && n.includes('140')) return false;
       if (tamanho === '140g' && !n.includes('140')) return false;
       return true;
@@ -7954,6 +7973,21 @@ function renderMixAuv() {
   // getChanRatio(name, p): usa channel_products para ter salao/ifood/food99 corretos.
   // cplug contem salao + delivery, entao salao = channel_products[name].salao
   const getChanRatio = (name, p, monthKey) => {
+    // Combo/Família/2x1 são exclusivos do delivery
+    if (['combo','2x1','familia'].includes(plataforma)) {
+      if (canal === 'salao') return 0;
+      if (canal === 'all') {
+        const cp2 = (RAW.channel_products || {})[name] || {};
+        const ifd2 = cp2.ifood||0, f992 = cp2.food99||0, kee2 = cp2.keeta||0, sal2 = cp2.salao||0;
+        const den2 = sal2+ifd2+f992+kee2;
+        if (!den2) {
+          const rm2 = monthKey ? (getRM()[monthKey]||{}) : {};
+          const rI2=rm2.ifood_val||0,rF2=rm2.food99_val||0,rK2=rm2.keeta_val||0,rS2=rm2.salao_val||0;
+          const rD2=rS2+rI2+rF2+rK2; return rD2 ? (rI2+rF2+rK2)/rD2 : 1;
+        }
+        return (ifd2+f992+kee2)/den2;
+      }
+    }
     if (canal === 'all') return 1;
     const cp  = (RAW.channel_products || {})[name] || {};
     const sal = cp.salao  || 0;
@@ -8388,7 +8422,7 @@ function renderMixAuv() {
       const COMBO_CANAL_2026 = {'07':{'salao':107,'delivery':202,'total':309}};
       ALL_MN.forEach(m => {
         const cq = COMBO_CANAL_2026[m]; if (!cq) return;
-        const v = canal === 'salao' ? cq.salao : canal === 'delivery' ? cq.delivery : cq.total;
+        const v = canal === 'salao' ? 0 : cq.delivery;
         totCur[m] = { [lbl]: v };
       });
     }
