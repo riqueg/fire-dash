@@ -6041,7 +6041,7 @@ function renderFollowup() {
   const _faltaHead    = Math.max(0, juneForeWithEv - juneReal);
   const _pctForeColor = _pctForeHead>=100?'#06d6a0':_pctForeHead>=80?'#ffd166':'var(--accent)';
   // Meta +6%
-  const _metaStretch6    = round2(juneForeWithEv * 1.06);
+  const _metaStretch6    = round2(juneForeWithEv); // meta = projeção + 30%
   const _pctMetaStretch  = _metaStretch6 > 0 ? _projFinalFU / _metaStretch6 * 100 : 0;
   const _faltaMeta6      = Math.max(0, _metaStretch6 - _projFinalFU);
   const _metaStrColor    = _pctMetaStretch >= 100 ? '#06d6a0' : _pctMetaStretch >= 80 ? '#ffd166' : '#ff4444';
@@ -6230,7 +6230,7 @@ function renderFollowup() {
        <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>`
-    : `Semana passada: <strong>${fmtR(pastRev)}</strong>${pastVsProj!=null?` <span style="color:${pvpColor};font-weight:700">(${fmt(Math.abs(pastVsProj),1)}% ${pvpSign} do proj.)</span>`:''} · Esta semana: <strong>${fmtR(nextProjRev)}</strong> projetado · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> <span style="color:${_pctForeColor};font-weight:700">(${fmt(_pctForeHead,1)}% do mês)</span> · Projeção mês: <strong>${fmtR(_projFinalFU)}</strong> · <span style="color:var(--muted)">Meta +6%:</span> <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_pctMetaStretch,1)}%${_faltaMeta6>0?' · falta '+fmtR(_faltaMeta6):' ✅'})</span> · SSS proj. vs ${parseInt(activeYear)-1}: <span style="color:${_sssFullColor};font-weight:700">${_sssFull>=0?'+':''}${fmt(_sssFull,1)}%</span>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
+    : `Semana passada: <strong>${fmtR(pastRev)}</strong>${pastVsProj!=null?` <span style="color:${pvpColor};font-weight:700">(${fmt(Math.abs(pastVsProj),1)}% ${pvpSign} do proj.)</span>`:''} · Esta semana: <strong>${fmtR(nextProjRev)}</strong> projetado · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> <span style="color:${_pctForeColor};font-weight:700">(${fmt(_pctForeHead,1)}% do mês)</span> · Projeção mês: <strong>${fmtR(_projFinalFU)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_pctMetaStretch,1)}%${_faltaMeta6>0?' · falta '+fmtR(_faltaMeta6):' ✅'})</span> · SSS proj. vs ${parseInt(activeYear)-1}: <span style="color:${_sssFullColor};font-weight:700">${_sssFull>=0?'+':''}${fmt(_sssFull,1)}%</span>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
 
   // ── Venda Diária vs Meta (substituiu Mês em Andamento) ─────────────
   {
@@ -9599,7 +9599,7 @@ function renderFollowup() {
   const _faltaHead    = Math.max(0, juneForeWithEv - juneReal);
   const _pctForeColor = _pctForeHead>=100?'#06d6a0':_pctForeHead>=80?'#ffd166':'var(--accent)';
   // Meta +6%
-  const _metaStretch6    = round2(juneForeWithEv * 1.06);
+  const _metaStretch6    = round2(juneForeWithEv); // meta = projeção + 30%
   const _pctMetaStretch  = _metaStretch6 > 0 ? _projFinalFU / _metaStretch6 * 100 : 0;
   const _faltaMeta6      = Math.max(0, _metaStretch6 - _projFinalFU);
   const _metaStrColor    = _pctMetaStretch >= 100 ? '#06d6a0' : _pctMetaStretch >= 80 ? '#ffd166' : '#ff4444';
@@ -9788,7 +9788,7 @@ function renderFollowup() {
        <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>`
-    : `Semana passada: <strong>${fmtR(pastRev)}</strong>${pastVsProj!=null?` <span style="color:${pvpColor};font-weight:700">(${fmt(Math.abs(pastVsProj),1)}% ${pvpSign} do proj.)</span>`:''} · Esta semana: <strong>${fmtR(nextProjRev)}</strong> projetado · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> <span style="color:${_pctForeColor};font-weight:700">(${fmt(_pctForeHead,1)}% do mês)</span> · Projeção mês: <strong>${fmtR(_projFinalFU)}</strong> · <span style="color:var(--muted)">Meta +6%:</span> <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_pctMetaStretch,1)}%${_faltaMeta6>0?' · falta '+fmtR(_faltaMeta6):' ✅'})</span> · SSS proj. vs ${parseInt(activeYear)-1}: <span style="color:${_sssFullColor};font-weight:700">${_sssFull>=0?'+':''}${fmt(_sssFull,1)}%</span>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
+    : `Semana passada: <strong>${fmtR(pastRev)}</strong>${pastVsProj!=null?` <span style="color:${pvpColor};font-weight:700">(${fmt(Math.abs(pastVsProj),1)}% ${pvpSign} do proj.)</span>`:''} · Esta semana: <strong>${fmtR(nextProjRev)}</strong> projetado · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> <span style="color:${_pctForeColor};font-weight:700">(${fmt(_pctForeHead,1)}% do mês)</span> · Projeção mês: <strong>${fmtR(_projFinalFU)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_pctMetaStretch,1)}%${_faltaMeta6>0?' · falta '+fmtR(_faltaMeta6):' ✅'})</span> · SSS proj. vs ${parseInt(activeYear)-1}: <span style="color:${_sssFullColor};font-weight:700">${_sssFull>=0?'+':''}${fmt(_sssFull,1)}%</span>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
 
   // ── Venda Diária vs Meta (substituiu Mês em Andamento) ─────────────
   {
