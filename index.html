@@ -4854,14 +4854,38 @@ function renderMixAuv() {
   // Promo plataformas: collapse to single bar (combo/2x1) or split by tamanho (familia)
   if (['combo','2x1','familia'].includes(plataforma) && catFilter === 'all') {
     if (plataforma === 'familia') {
-      subcats   = ['4 por R$99', '4 por R$119'];
-      subColors = { '4 por R$99': '#c87eff', '4 por R$119': '#5c1fa8' };
-      const famBurCur = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
-      const famBur25  = buildTotals(prods25,        'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
-      ALL_MN.forEach(m => {
-        totCur[m] = { '4 por R$99': famBurCur[m]?.['100g & Chicken'] || 0, '4 por R$119': famBurCur[m]?.['140g'] || 0 };
-        tot25[m]  = { '4 por R$99': famBur25[m]?.['100g & Chicken']  || 0, '4 por R$119': famBur25[m]?.['140g']  || 0 };
-      });
+      const FAMILIA_2026 = { '08': { total: 46, '100g': null, '140g': null } };
+      if (tamanho === 'all') {
+        subcats   = ['Família'];
+        subColors = { 'Família': '#c87eff' };
+        [totCur, tot25].forEach(tot => {
+          Object.keys(tot).forEach(m => { tot[m] = { 'Família': tot[m]['Burger'] || 0 }; });
+        });
+        if (activeYear === '2026') {
+          ALL_MN.forEach(m => {
+            const ov = FAMILIA_2026[m]; if (!ov) return;
+            totCur[m] = { 'Família': canal === 'salao' ? 0 : ov.total };
+          });
+        }
+      } else {
+        const is100g = tamanho === '100g';
+        const lbl = is100g ? '4 por R$99' : '4 por R$119';
+        const sub = is100g ? '100g & Chicken' : '140g';
+        subcats   = [lbl];
+        subColors = { [lbl]: is100g ? '#c87eff' : '#5c1fa8' };
+        const famBurCur = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
+        const famBur25  = buildTotals(prods25,        'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
+        ALL_MN.forEach(m => {
+          totCur[m] = { [lbl]: (famBurCur[m]?.[sub] || 0) / 4 };
+          tot25[m]  = { [lbl]: (famBur25[m]?.[sub]  || 0) / 4 };
+        });
+        if (activeYear === '2026') {
+          ALL_MN.forEach(m => {
+            const ov = FAMILIA_2026[m]; if (!ov || ov[tamanho] === null) return;
+            totCur[m] = { [lbl]: canal === 'salao' ? 0 : ov[tamanho] };
+          });
+        }
+      }
     } else {
       const PLBL = { combo: 'Combo', '2x1': '2x1' };
       const PCLR = { combo: '#7b3dcc', '2x1': '#e040fb' };
@@ -8424,14 +8448,38 @@ function renderMixAuv() {
   // Promo plataformas: collapse to single bar (combo/2x1) or split by tamanho (familia)
   if (['combo','2x1','familia'].includes(plataforma) && catFilter === 'all') {
     if (plataforma === 'familia') {
-      subcats   = ['4 por R$99', '4 por R$119'];
-      subColors = { '4 por R$99': '#c87eff', '4 por R$119': '#5c1fa8' };
-      const famBurCur = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
-      const famBur25  = buildTotals(prods25,        'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
-      ALL_MN.forEach(m => {
-        totCur[m] = { '4 por R$99': famBurCur[m]?.['100g & Chicken'] || 0, '4 por R$119': famBurCur[m]?.['140g'] || 0 };
-        tot25[m]  = { '4 por R$99': famBur25[m]?.['100g & Chicken']  || 0, '4 por R$119': famBur25[m]?.['140g']  || 0 };
-      });
+      const FAMILIA_2026 = { '08': { total: 46, '100g': null, '140g': null } };
+      if (tamanho === 'all') {
+        subcats   = ['Família'];
+        subColors = { 'Família': '#c87eff' };
+        [totCur, tot25].forEach(tot => {
+          Object.keys(tot).forEach(m => { tot[m] = { 'Família': tot[m]['Burger'] || 0 }; });
+        });
+        if (activeYear === '2026') {
+          ALL_MN.forEach(m => {
+            const ov = FAMILIA_2026[m]; if (!ov) return;
+            totCur[m] = { 'Família': canal === 'salao' ? 0 : ov.total };
+          });
+        }
+      } else {
+        const is100g = tamanho === '100g';
+        const lbl = is100g ? '4 por R$99' : '4 por R$119';
+        const sub = is100g ? '100g & Chicken' : '140g';
+        subcats   = [lbl];
+        subColors = { [lbl]: is100g ? '#c87eff' : '#5c1fa8' };
+        const famBurCur = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
+        const famBur25  = buildTotals(prods25,        'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
+        ALL_MN.forEach(m => {
+          totCur[m] = { [lbl]: (famBurCur[m]?.[sub] || 0) / 4 };
+          tot25[m]  = { [lbl]: (famBur25[m]?.[sub]  || 0) / 4 };
+        });
+        if (activeYear === '2026') {
+          ALL_MN.forEach(m => {
+            const ov = FAMILIA_2026[m]; if (!ov || ov[tamanho] === null) return;
+            totCur[m] = { [lbl]: canal === 'salao' ? 0 : ov[tamanho] };
+          });
+        }
+      }
     } else {
       const PLBL = { combo: 'Combo', '2x1': '2x1' };
       const PCLR = { combo: '#7b3dcc', '2x1': '#e040fb' };
