@@ -4895,12 +4895,16 @@ function renderMixAuv() {
       [totCur, tot25].forEach(tot => {
         Object.keys(tot).forEach(m => { tot[m] = { [lbl]: tot[m]['Burger'] || 0 }; });
       });
-      if (activeYear === '2026' && plataforma === 'combo' && tamanho === 'all') {
-        const COMBO_CANAL_2026 = {'07':{'salao':107,'delivery':202,'total':309},'08':{'salao':0,'delivery':200,'total':200}};
+      if (activeYear === '2026' && plataforma === 'combo') {
+        const COMBO_CANAL_2026 = {
+          '07': { all: 202, '100g': null, '140g': null },
+          '08': { all: 200, '100g': 79,   '140g': 121  }
+        };
         ALL_MN.forEach(m => {
           const cq = COMBO_CANAL_2026[m]; if (!cq) return;
-          const v = canal === 'salao' ? 0 : cq.delivery;
-          totCur[m] = { [lbl]: v };
+          const v = cq[tamanho === 'all' ? 'all' : tamanho];
+          if (v == null) return;
+          totCur[m] = { [lbl]: canal === 'salao' ? 0 : v };
         });
       }
     }
@@ -8489,12 +8493,16 @@ function renderMixAuv() {
       [totCur, tot25].forEach(tot => {
         Object.keys(tot).forEach(m => { tot[m] = { [lbl]: tot[m]['Burger'] || 0 }; });
       });
-      if (activeYear === '2026' && plataforma === 'combo' && tamanho === 'all') {
-        const COMBO_CANAL_2026 = {'07':{'salao':107,'delivery':202,'total':309},'08':{'salao':0,'delivery':200,'total':200}};
+      if (activeYear === '2026' && plataforma === 'combo') {
+        const COMBO_CANAL_2026 = {
+          '07': { all: 202, '100g': null, '140g': null },
+          '08': { all: 200, '100g': 79,   '140g': 121  }
+        };
         ALL_MN.forEach(m => {
           const cq = COMBO_CANAL_2026[m]; if (!cq) return;
-          const v = canal === 'salao' ? 0 : cq.delivery;
-          totCur[m] = { [lbl]: v };
+          const v = cq[tamanho === 'all' ? 'all' : tamanho];
+          if (v == null) return;
+          totCur[m] = { [lbl]: canal === 'salao' ? 0 : v };
         });
       }
     }
