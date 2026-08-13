@@ -4398,8 +4398,9 @@ function renderMixAuv() {
     if (plataforma === 'familia') {
       if (!isPromo || !n.includes('4 por')) return false;
       if (n.includes('salão') || n.includes('salao')) return false;
-      if (tamanho === '100g' && n.includes('140')) return false;
-      if (tamanho === '140g' && !n.includes('140')) return false;
+      const is140fam = n.includes('140') || n.includes('119');
+      if (tamanho === '100g' && is140fam) return false;
+      if (tamanho === '140g' && !is140fam) return false;
       return true;
     }
     if (plataforma === '2x1') {
@@ -4502,7 +4503,7 @@ function renderMixAuv() {
       return { Burger: { [sub]: 2 } };
     }
     if (n.includes('4 por') || n.includes('4por')) {
-      const sub = n.includes('140') ? '140g' : '100g & Chicken';
+      const sub = (n.includes('140') || n.includes('119')) ? '140g' : '100g & Chicken';
       return { Burger: { [sub]: 4 } };
     }
     return null;
@@ -7967,8 +7968,9 @@ function renderMixAuv() {
     if (plataforma === 'familia') {
       if (!isPromo || !n.includes('4 por')) return false;
       if (n.includes('salão') || n.includes('salao')) return false;
-      if (tamanho === '100g' && n.includes('140')) return false;
-      if (tamanho === '140g' && !n.includes('140')) return false;
+      const is140fam = n.includes('140') || n.includes('119');
+      if (tamanho === '100g' && is140fam) return false;
+      if (tamanho === '140g' && !is140fam) return false;
       return true;
     }
     if (plataforma === '2x1') {
@@ -8071,7 +8073,7 @@ function renderMixAuv() {
       return { Burger: { [sub]: 2 } };
     }
     if (n.includes('4 por') || n.includes('4por')) {
-      const sub = n.includes('140') ? '140g' : '100g & Chicken';
+      const sub = (n.includes('140') || n.includes('119')) ? '140g' : '100g & Chicken';
       return { Burger: { [sub]: 4 } };
     }
     return null;
