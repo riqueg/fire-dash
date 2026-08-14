@@ -4812,7 +4812,7 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25,'Burger',burgerSubcat,subcats, getChanRatio);
       // Correção: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
       if (plataforma === 'all') {
-        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2095,'08':801};
+        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':801};
         const BURGER_COMPUTED_BASE = {'01':2326,'02':2633,'03':3369,'04':2856,'05':3081,'06':2709,'07':2299,'08':880};
         ALL_MN.forEach(m => {
           const correct = BURGER_QTY_2026[m];
@@ -8380,12 +8380,11 @@ function renderMixAuv() {
     tot25     = buildAllCatTotals(prods25, getChanRatio);
     // Correção Burger: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
     if (activeYear === '2026' && plataforma === 'all') {
-      const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2095};
-      const BURGER_COMPUTED_BASE = {'01':2326,'02':2633,'03':3369,'04':2856,'05':3081,'06':2709,'07':2299};
+      const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':801};
       ALL_MN.forEach(m => {
-        const correct = BURGER_QTY_2026[m]; const base = BURGER_COMPUTED_BASE[m];
-        if (correct == null || !base) return;
-        totCur[m]['Burger'] = Math.round((totCur[m]['Burger'] || 0) * correct / base);
+        const correct = BURGER_QTY_2026[m];
+        if (correct == null) return;
+        totCur[m]['Burger'] = correct;
       });
     }
   } else if (catFilter === 'Burger') {
@@ -8410,7 +8409,7 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25,'Burger',burgerSubcat,subcats, getChanRatio);
       // Correção: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
       if (plataforma === 'all') {
-        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2095};
+        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682};
         const BURGER_COMPUTED_BASE = {'01':2326,'02':2633,'03':3369,'04':2856,'05':3081,'06':2709,'07':2299};
         ALL_MN.forEach(m => {
           const correct = BURGER_QTY_2026[m];
