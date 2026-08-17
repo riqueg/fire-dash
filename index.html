@@ -6015,6 +6015,8 @@ function renderFollowup() {
   _fdMon.forEach(d => { const p=d.data.split('/'); foreMap[p[0]+'/'+p[1]+'/2026'] = d; });
   const pastProj   = pastDates.reduce((s,d) => { const fd=foreMap[d]; return s+(fd?.forecast ?? fd?.meta ?? fd?.real ?? 0); }, 0);
   const pastVsProj = pastProj > 0 ? (pastRev - pastProj) / pastProj * 100 : null;
+  const pastMeta   = pastDates.reduce((s,d) => { const fd=foreMap[d]; return s+(fd?.meta||0); }, 0);
+  const pastVsMeta = pastMeta > 0 ? (pastRev - pastMeta) / pastMeta * 100 : null;
 
   // Next week: use forecast data where available, otherwise estimate with avg
   const pastDailyAvg = pastDays > 0 ? pastRev/pastDays : 0;
@@ -6269,7 +6271,7 @@ function renderFollowup() {
        <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>`
-    : `Semana passada: <strong>${fmtR(pastRev)}</strong>${pastVsProj!=null?` <span style="color:${pvpColor};font-weight:700">(${fmt(Math.abs(pastVsProj),1)}% ${pvpSign} do proj.)</span>`:''} · Esta semana: <strong>${fmtR(nextProjRev)}</strong> projetado · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> <span style="color:${_pctForeColor};font-weight:700">(${fmt(_pctForeHead,1)}% do mês)</span> · Projeção mês: <strong>${fmtR(_projFinalFU)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_pctMetaStretch,1)}%${_faltaMeta6>0?' · falta '+fmtR(_faltaMeta6):' ✅'})</span> · SSS proj. vs ${parseInt(activeYear)-1}: <span style="color:${_sssFullColor};font-weight:700">${_sssFull>=0?'+':''}${fmt(_sssFull,1)}%</span>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
+    : `<span style="color:var(--muted)">Semana ${_weekStart}–${_weekEnd}:</span> <strong>${fmtR(pastRev)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(pastMeta)}</strong>${pastVsMeta!=null?` <span style="color:${pastVsMeta>=0?'#06d6a0':'#ff4444'};font-weight:700">(${pastVsMeta>=0?'+':''}${fmt(pastVsMeta,1)}%)</span>`:''} · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> de <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_metaStretch6>0?juneReal/_metaStretch6*100:0,1)}%)</span> · <span style="color:var(--muted)">Real vs proj.:</span> <strong>${fmtR(juneReal)}</strong> vs <strong>${fmtR(_projFinalFU)}</strong>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
 
   // ── Venda Diária vs Meta (substituiu Mês em Andamento) ─────────────
   {
@@ -9612,6 +9614,8 @@ function renderFollowup() {
   _fdMon.forEach(d => { const p=d.data.split('/'); foreMap[p[0]+'/'+p[1]+'/2026'] = d; });
   const pastProj   = pastDates.reduce((s,d) => { const fd=foreMap[d]; return s+(fd?.forecast ?? fd?.meta ?? fd?.real ?? 0); }, 0);
   const pastVsProj = pastProj > 0 ? (pastRev - pastProj) / pastProj * 100 : null;
+  const pastMeta   = pastDates.reduce((s,d) => { const fd=foreMap[d]; return s+(fd?.meta||0); }, 0);
+  const pastVsMeta = pastMeta > 0 ? (pastRev - pastMeta) / pastMeta * 100 : null;
 
   // Next week: use forecast data where available, otherwise estimate with avg
   const pastDailyAvg = pastDays > 0 ? pastRev/pastDays : 0;
@@ -9866,7 +9870,7 @@ function renderFollowup() {
        <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>`
-    : `Semana passada: <strong>${fmtR(pastRev)}</strong>${pastVsProj!=null?` <span style="color:${pvpColor};font-weight:700">(${fmt(Math.abs(pastVsProj),1)}% ${pvpSign} do proj.)</span>`:''} · Esta semana: <strong>${fmtR(nextProjRev)}</strong> projetado · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> <span style="color:${_pctForeColor};font-weight:700">(${fmt(_pctForeHead,1)}% do mês)</span> · Projeção mês: <strong>${fmtR(_projFinalFU)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_pctMetaStretch,1)}%${_faltaMeta6>0?' · falta '+fmtR(_faltaMeta6):' ✅'})</span> · SSS proj. vs ${parseInt(activeYear)-1}: <span style="color:${_sssFullColor};font-weight:700">${_sssFull>=0?'+':''}${fmt(_sssFull,1)}%</span>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
+    : `<span style="color:var(--muted)">Semana ${_weekStart}–${_weekEnd}:</span> <strong>${fmtR(pastRev)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(pastMeta)}</strong>${pastVsMeta!=null?` <span style="color:${pastVsMeta>=0?'#06d6a0':'#ff4444'};font-weight:700">(${pastVsMeta>=0?'+':''}${fmt(pastVsMeta,1)}%)</span>`:''} · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> de <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_metaStretch6>0?juneReal/_metaStretch6*100:0,1)}%)</span> · <span style="color:var(--muted)">Real vs proj.:</span> <strong>${fmtR(juneReal)}</strong> vs <strong>${fmtR(_projFinalFU)}</strong>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
 
   // ── Venda Diária vs Meta (substituiu Mês em Andamento) ─────────────
   {
