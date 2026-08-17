@@ -5655,10 +5655,8 @@ function renderChannelMix() {
     data: {
       labels,
       datasets: [
-        { label: '🏠 Salão',  data: top20.map(p => p.salao||0),  backgroundColor: 'rgba(224,58,14,0.85)',  borderRadius: 3 },
-        { label: '📱 iFood',  data: top20.map(p => p.ifood||0),  backgroundColor: 'rgba(200,16,46,0.85)',  borderRadius: 3 },
-        { label: '🟠 99food', data: top20.map(p => p.food99||0), backgroundColor: 'rgba(224,112,0,0.85)', borderRadius: 3 },
-        { label: '🟢 Keeta',  data: top20.map(p => p.keeta||0),  backgroundColor: 'rgba(0,176,155,0.85)',  borderRadius: 3 }
+        { label: '🏠 Salão',    data: top20.map(p => p.salao||0),  backgroundColor: 'rgba(224,58,14,0.85)', borderRadius: 3 },
+        { label: '📦 Delivery', data: top20.map(p => (p.ifood||0)+(p.food99||0)+(p.keeta||0)), backgroundColor: 'rgba(200,16,46,0.85)', borderRadius: 3 }
       ]
     },
     options: {
@@ -5681,9 +5679,9 @@ function renderChannelMix() {
               color: '#fff', font: { size: 9, weight: '700' },
               anchor: 'center', align: 'center', clamp: true
             },
-            // Total em cima da última barra (99food)
+            // Total em cima da última barra (Delivery)
             total: {
-              display: ctx => ctx.datasetIndex === 3,
+              display: ctx => ctx.datasetIndex === 1,
               formatter: (v, ctx) => {
                 const i = ctx.dataIndex;
                 const ds = ctx.chart.data.datasets;
@@ -9254,10 +9252,8 @@ function renderChannelMix() {
     data: {
       labels,
       datasets: [
-        { label: '🏠 Salão',  data: top20.map(p => p.salao||0),  backgroundColor: 'rgba(224,58,14,0.85)',  borderRadius: 3 },
-        { label: '📱 iFood',  data: top20.map(p => p.ifood||0),  backgroundColor: 'rgba(200,16,46,0.85)',  borderRadius: 3 },
-        { label: '🟠 99food', data: top20.map(p => p.food99||0), backgroundColor: 'rgba(224,112,0,0.85)', borderRadius: 3 },
-        { label: '🟢 Keeta',  data: top20.map(p => p.keeta||0),  backgroundColor: 'rgba(0,176,155,0.85)',  borderRadius: 3 }
+        { label: '🏠 Salão',    data: top20.map(p => p.salao||0),  backgroundColor: 'rgba(224,58,14,0.85)', borderRadius: 3 },
+        { label: '📦 Delivery', data: top20.map(p => (p.ifood||0)+(p.food99||0)+(p.keeta||0)), backgroundColor: 'rgba(200,16,46,0.85)', borderRadius: 3 }
       ]
     },
     options: {
@@ -9280,9 +9276,9 @@ function renderChannelMix() {
               color: '#fff', font: { size: 9, weight: '700' },
               anchor: 'center', align: 'center', clamp: true
             },
-            // Total em cima da última barra (99food)
+            // Total em cima da última barra (Delivery)
             total: {
-              display: ctx => ctx.datasetIndex === 3,
+              display: ctx => ctx.datasetIndex === 1,
               formatter: (v, ctx) => {
                 const i = ctx.dataIndex;
                 const ds = ctx.chart.data.datasets;
