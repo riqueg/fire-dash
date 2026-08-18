@@ -4951,6 +4951,30 @@ function renderMixAuv() {
           totCur[m] = { [lbl]: v };
         });
       }
+      if (activeYear === '2026' && plataforma === '2x1') {
+        const X2X1_2026 = {
+          '08': {
+            all:   { all: 93, salao: null, delivery: null },
+            '100g': { all: 28, salao: null, delivery: null },
+            '140g': { all: 65, salao: null, delivery: null }
+          }
+        };
+        ALL_MN.forEach(m => {
+          const cq = X2X1_2026[m]; if (!cq) return;
+          const szKey = tamanho === 'all' ? 'all' : tamanho;
+          const entry = cq[szKey]; if (entry == null) return;
+          let v;
+          if (typeof entry === 'object') {
+            if (canal === 'salao')    v = entry.salao    ?? null;
+            else if (canal === 'all') v = entry.all      ?? null;
+            else                       v = entry.delivery ?? null;
+          } else {
+            v = canal === 'salao' ? null : entry;
+          }
+          if (v == null) return;
+          totCur[m] = { [lbl]: v };
+        });
+      }
     }
   }
 
@@ -8579,6 +8603,30 @@ function renderMixAuv() {
         };
         ALL_MN.forEach(m => {
           const cq = COMBO_CANAL_2026[m]; if (!cq) return;
+          const szKey = tamanho === 'all' ? 'all' : tamanho;
+          const entry = cq[szKey]; if (entry == null) return;
+          let v;
+          if (typeof entry === 'object') {
+            if (canal === 'salao')    v = entry.salao    ?? null;
+            else if (canal === 'all') v = entry.all      ?? null;
+            else                       v = entry.delivery ?? null;
+          } else {
+            v = canal === 'salao' ? null : entry;
+          }
+          if (v == null) return;
+          totCur[m] = { [lbl]: v };
+        });
+      }
+      if (activeYear === '2026' && plataforma === '2x1') {
+        const X2X1_2026 = {
+          '08': {
+            all:   { all: 93, salao: null, delivery: null },
+            '100g': { all: 28, salao: null, delivery: null },
+            '140g': { all: 65, salao: null, delivery: null }
+          }
+        };
+        ALL_MN.forEach(m => {
+          const cq = X2X1_2026[m]; if (!cq) return;
           const szKey = tamanho === 'all' ? 'all' : tamanho;
           const entry = cq[szKey]; if (entry == null) return;
           let v;
