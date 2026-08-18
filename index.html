@@ -4805,18 +4805,34 @@ function renderMixAuv() {
   } else if (catFilter === 'Burger') {
     const burgerSub = document.getElementById('mix-auv-burgersub')?.value || 'all';
     if (burgerSub !== 'all') {
-      // Drill: show individual products in the selected sub-group
-      subcats    = [];
-      subColors  = {};
-      const ITEM_PALETTE = ['#e03a0e','#c8691a','#f07030','#e8a020','#8b3a0a','#d45010','#a02808','#f09060','#604020','#c04818','#e06840','#702010'];
-      let pi = 0;
-      Object.entries(getProducts()).forEach(([name, p]) => {
-        if (displayCat(p.cat, name) === 'Burger' && burgerSubcat(name) === burgerSub) {
-          if (!subcats.includes(name)) { subcats.push(name); subColors[name] = ITEM_PALETTE[pi++ % ITEM_PALETTE.length]; }
-        }
-      });
-      totCur = buildTotals(getProducts(), 'Burger', n => n, subcats, getChanRatio);
-      tot25  = buildTotals(prods25, 'Burger', n => n, subcats, getChanRatio);
+      // Drill: consolidated por tipo de lanche
+      const _is100g = burgerSub === '100g & Chicken';
+      subcats   = _is100g
+        ? ['X-Burger','X-Salada','X-Bacon','Fire Classic','Fire Blue','Fire Relish','Fire Chicken']
+        : ['X-Burger','X-Salada','X-Bacon','Fire Classic','Fire Blue','Fire Relish'];
+      subColors = {
+        'X-Burger':    '#e03a0e',
+        'X-Salada':    '#f07030',
+        'X-Bacon':     '#e8a020',
+        'Fire Classic':'#c8691a',
+        'Fire Blue':   '#1971c2',
+        'Fire Relish': '#d45010',
+        'Fire Chicken':'#a02808'
+      };
+      const burgerBaseName = name => {
+        if (burgerSubcat(name) !== burgerSub) return '_skip_';
+        const n = name.toLowerCase();
+        if (n.includes('chicken'))                           return 'Fire Chicken';
+        if (n.includes('relish'))                            return 'Fire Relish';
+        if (n.includes('blue'))                              return 'Fire Blue';
+        if (n.includes('classic'))                           return 'Fire Classic';
+        if (n.includes('x-bacon') || n.includes('x bacon')) return 'X-Bacon';
+        if (n.includes('salada'))                            return 'X-Salada';
+        if (n.includes('x-burger') || n.includes('x burger') || n.includes('x- burger')) return 'X-Burger';
+        return '_skip_';
+      };
+      totCur = buildTotals(getProducts(), 'Burger', burgerBaseName, subcats, getChanRatio);
+      tot25  = buildTotals(prods25, 'Burger', burgerBaseName, subcats, getChanRatio);
     } else {
       subcats    = ['100g & Chicken','140g','Hot Dog'];
       subColors  = {'100g & Chicken':'#e03a0e','140g':'#c8691a','Hot Dog':'#8b3a0a'};
@@ -8414,18 +8430,34 @@ function renderMixAuv() {
   } else if (catFilter === 'Burger') {
     const burgerSub = document.getElementById('mix-auv-burgersub')?.value || 'all';
     if (burgerSub !== 'all') {
-      // Drill: show individual products in the selected sub-group
-      subcats    = [];
-      subColors  = {};
-      const ITEM_PALETTE = ['#e03a0e','#c8691a','#f07030','#e8a020','#8b3a0a','#d45010','#a02808','#f09060','#604020','#c04818','#e06840','#702010'];
-      let pi = 0;
-      Object.entries(getProducts()).forEach(([name, p]) => {
-        if (displayCat(p.cat, name) === 'Burger' && burgerSubcat(name) === burgerSub) {
-          if (!subcats.includes(name)) { subcats.push(name); subColors[name] = ITEM_PALETTE[pi++ % ITEM_PALETTE.length]; }
-        }
-      });
-      totCur = buildTotals(getProducts(), 'Burger', n => n, subcats, getChanRatio);
-      tot25  = buildTotals(prods25, 'Burger', n => n, subcats, getChanRatio);
+      // Drill: consolidated por tipo de lanche
+      const _is100g = burgerSub === '100g & Chicken';
+      subcats   = _is100g
+        ? ['X-Burger','X-Salada','X-Bacon','Fire Classic','Fire Blue','Fire Relish','Fire Chicken']
+        : ['X-Burger','X-Salada','X-Bacon','Fire Classic','Fire Blue','Fire Relish'];
+      subColors = {
+        'X-Burger':    '#e03a0e',
+        'X-Salada':    '#f07030',
+        'X-Bacon':     '#e8a020',
+        'Fire Classic':'#c8691a',
+        'Fire Blue':   '#1971c2',
+        'Fire Relish': '#d45010',
+        'Fire Chicken':'#a02808'
+      };
+      const burgerBaseName = name => {
+        if (burgerSubcat(name) !== burgerSub) return '_skip_';
+        const n = name.toLowerCase();
+        if (n.includes('chicken'))                           return 'Fire Chicken';
+        if (n.includes('relish'))                            return 'Fire Relish';
+        if (n.includes('blue'))                              return 'Fire Blue';
+        if (n.includes('classic'))                           return 'Fire Classic';
+        if (n.includes('x-bacon') || n.includes('x bacon')) return 'X-Bacon';
+        if (n.includes('salada'))                            return 'X-Salada';
+        if (n.includes('x-burger') || n.includes('x burger') || n.includes('x- burger')) return 'X-Burger';
+        return '_skip_';
+      };
+      totCur = buildTotals(getProducts(), 'Burger', burgerBaseName, subcats, getChanRatio);
+      tot25  = buildTotals(prods25, 'Burger', burgerBaseName, subcats, getChanRatio);
     } else {
       subcats    = ['100g & Chicken','140g','Hot Dog'];
       subColors  = {'100g & Chicken':'#e03a0e','140g':'#c8691a','Hot Dog':'#8b3a0a'};
