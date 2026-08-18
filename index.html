@@ -4839,13 +4839,13 @@ function renderMixAuv() {
       totCur = buildTotals(getProducts(), 'Burger',burgerSubcat,subcats, getChanRatio);
       tot25  = buildTotals(prods25,'Burger',burgerSubcat,subcats, getChanRatio);
       // Correção: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
-      if (plataforma === 'all') {
+      if (plataforma === 'all' && canal === 'all') {
         const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':1638};
-        const BURGER_COMPUTED_BASE = {'01':2326,'02':2633,'03':3369,'04':2856,'05':3081,'06':2709,'07':2299,'08':880};
         ALL_MN.forEach(m => {
           const correct = BURGER_QTY_2026[m];
-          const base = BURGER_COMPUTED_BASE[m];
-          if (!correct || !base) return;
+          if (!correct) return;
+          const base = subcats.reduce((s,c) => s + (totCur[m][c]||0), 0);
+          if (!base) return;
           const scale = correct / base;
           subcats.forEach(c => { totCur[m][c] = Math.round((totCur[m][c]||0) * scale); });
         });
@@ -8505,13 +8505,13 @@ function renderMixAuv() {
       totCur = buildTotals(getProducts(), 'Burger',burgerSubcat,subcats, getChanRatio);
       tot25  = buildTotals(prods25,'Burger',burgerSubcat,subcats, getChanRatio);
       // Correção: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
-      if (plataforma === 'all') {
+      if (plataforma === 'all' && canal === 'all') {
         const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':1638};
-        const BURGER_COMPUTED_BASE = {'01':2326,'02':2633,'03':3369,'04':2856,'05':3081,'06':2709,'07':2299};
         ALL_MN.forEach(m => {
           const correct = BURGER_QTY_2026[m];
-          const base = BURGER_COMPUTED_BASE[m];
-          if (!correct || !base) return;
+          if (!correct) return;
+          const base = subcats.reduce((s,c) => s + (totCur[m][c]||0), 0);
+          if (!base) return;
           const scale = correct / base;
           subcats.forEach(c => { totCur[m][c] = Math.round((totCur[m][c]||0) * scale); });
         });
