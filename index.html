@@ -4924,14 +4924,27 @@ function renderMixAuv() {
       });
       if (activeYear === '2026' && plataforma === 'combo') {
         const COMBO_CANAL_2026 = {
-          '07': { all: 202, '100g': null, '140g': null },
-          '08': { all: 200, '100g': 79,   '140g': 121  }
+          '07': {
+            all:   { all: 309, salao: 107, delivery: 202 },
+            '100g': { all: 145, salao: 54,  delivery: 91  },
+            '140g': { all: 164, salao: 53,  delivery: 111 }
+          },
+          '08': { all: 200, '100g': 79, '140g': 121 }
         };
         ALL_MN.forEach(m => {
           const cq = COMBO_CANAL_2026[m]; if (!cq) return;
-          const v = cq[tamanho === 'all' ? 'all' : tamanho];
+          const szKey = tamanho === 'all' ? 'all' : tamanho;
+          const entry = cq[szKey]; if (entry == null) return;
+          let v;
+          if (typeof entry === 'object') {
+            if (canal === 'salao')    v = entry.salao    ?? null;
+            else if (canal === 'all') v = entry.all      ?? null;
+            else                       v = entry.delivery ?? null;
+          } else {
+            v = canal === 'salao' ? null : entry;
+          }
           if (v == null) return;
-          totCur[m] = { [lbl]: canal === 'salao' ? 0 : v };
+          totCur[m] = { [lbl]: v };
         });
       }
     }
@@ -8549,14 +8562,27 @@ function renderMixAuv() {
       });
       if (activeYear === '2026' && plataforma === 'combo') {
         const COMBO_CANAL_2026 = {
-          '07': { all: 202, '100g': null, '140g': null },
-          '08': { all: 200, '100g': 79,   '140g': 121  }
+          '07': {
+            all:   { all: 309, salao: 107, delivery: 202 },
+            '100g': { all: 145, salao: 54,  delivery: 91  },
+            '140g': { all: 164, salao: 53,  delivery: 111 }
+          },
+          '08': { all: 200, '100g': 79, '140g': 121 }
         };
         ALL_MN.forEach(m => {
           const cq = COMBO_CANAL_2026[m]; if (!cq) return;
-          const v = cq[tamanho === 'all' ? 'all' : tamanho];
+          const szKey = tamanho === 'all' ? 'all' : tamanho;
+          const entry = cq[szKey]; if (entry == null) return;
+          let v;
+          if (typeof entry === 'object') {
+            if (canal === 'salao')    v = entry.salao    ?? null;
+            else if (canal === 'all') v = entry.all      ?? null;
+            else                       v = entry.delivery ?? null;
+          } else {
+            v = canal === 'salao' ? null : entry;
+          }
           if (v == null) return;
-          totCur[m] = { [lbl]: canal === 'salao' ? 0 : v };
+          totCur[m] = { [lbl]: v };
         });
       }
     }
