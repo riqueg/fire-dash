@@ -3996,7 +3996,7 @@ function displayCat(cat, name, platform) {
   }
   if (cat === 'Burger' || cat === 'Hot Dog') return 'Burger';
   if (cat === 'Fritas' || cat === 'Porções') return 'Entradas';
-  if (cat === 'Bebidas') return 'Bebidas';
+  if (cat === 'Bebidas') { const _n = (name||'').toLowerCase(); if (_n.includes('milk shake') || _n.includes('milkshake')) return 'Sobremesas'; return 'Bebidas'; }
   if (cat === 'Cervejas') return 'Cervejas';
   if (cat === 'Sobremesas') return 'Sobremesas';
   if (cat === 'Combo') return 'Burger';
@@ -4535,7 +4535,7 @@ function renderMixAuv() {
   const bebidasSubcat  = name => { const n = name.toLowerCase(); if (n.includes('água') || n.includes('agua') || n === 'h2o') return 'Água'; if (n.includes('fire fresh')) return 'Fire Fresh'; if (n.includes('milk shake') || n.includes('milkshake')) return 'Milk Shake'; return 'Refri'; };
   const cervejasSubcat = name => { const n = name.toLowerCase(); if (n.includes('ipa') || n === 'lager fire' || (n.includes('lager') && n.includes('fire')) || n === 'ipa fire') return 'Cerveja Fire'; return 'Outras'; };
   const promoSubcat    = name => { const n = name.toLowerCase(); if (n.includes('2x1') || n.includes('2 x 1')) return '2x1'; if (name.includes('4 por R$99')) return '4 por R$99'; if (name.includes('4 por R$119')) return '4 por R$119'; if (name.includes('100g')) return 'Combo 100g'; if (name.includes('140g')) return 'Combo 140g'; return name; };
-  const sobSubcat      = name => name.includes('Pudim') ? 'Pudim' : 'Brownie';
+  const sobSubcat      = name => { const _n = name.toLowerCase(); if (_n.includes('milk shake') || _n.includes('milkshake')) return 'Milk Shake'; return name.includes('Pudim') ? 'Pudim' : 'Brownie'; };
 
   // ── Build monthly totals for a given products set, cat, and classifier ──
   const buildTotals = (prodsObj, catName, classifier, subcats, ratioFn) => {
@@ -4856,9 +4856,9 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25,'Entradas',entradasSubcat,subcats, getChanRatio);
     }
   }
-  else if (catFilter === 'Bebidas')      { subcats = ['Refri','Água','Fire Fresh','Milk Shake'];                       subColors = {'Refri':'#4cc9f0','Água':'#22b4d6','Fire Fresh':'#e03a0e','Milk Shake':'#9b59b6'}; totCur = buildTotals(getProducts(), 'Bebidas',bebidasSubcat,subcats, getChanRatio);   tot25 = buildTotals(prods25,'Bebidas',bebidasSubcat,subcats, getChanRatio); }
+  else if (catFilter === 'Bebidas')      { subcats = ['Refri','Água','Fire Fresh'];                                    subColors = {'Refri':'#4cc9f0','Água':'#22b4d6','Fire Fresh':'#e03a0e'}; totCur = buildTotals(getProducts(), 'Bebidas',bebidasSubcat,subcats, getChanRatio);   tot25 = buildTotals(prods25,'Bebidas',bebidasSubcat,subcats, getChanRatio); }
   else if (catFilter === 'Cervejas')     { subcats = ['Cerveja Fire','Outras'];                                        subColors = {'Cerveja Fire':'#e03a0e','Outras':'#ff8c42'}; totCur = buildTotals(getProducts(), 'Cervejas',cervejasSubcat,subcats, getChanRatio);  tot25 = buildTotals(prods25,'Cervejas',cervejasSubcat,subcats, getChanRatio); }
-  else if (catFilter === 'Sobremesas')   { subcats = ['Pudim','Brownie'];                                              subColors = {'Pudim':'#ff77a0','Brownie':'#c0392b'}; totCur = buildTotals(getProducts(), 'Sobremesas',sobSubcat,subcats, getChanRatio);     tot25 = buildTotals(prods25,'Sobremesas',sobSubcat,subcats, getChanRatio); }
+  else if (catFilter === 'Sobremesas')   { subcats = ['Pudim','Brownie','Milk Shake'];                               subColors = {'Pudim':'#ff77a0','Brownie':'#c0392b','Milk Shake':'#9b59b6'}; totCur = buildTotals(getProducts(), 'Sobremesas',sobSubcat,subcats, getChanRatio);     tot25 = buildTotals(prods25,'Sobremesas',sobSubcat,subcats, getChanRatio); }
   else if (catFilter === 'Promo')        { subcats = ['Combo 100g','Combo 140g','4 por R$99','4 por R$119','2x1'];     subColors = {'Combo 100g':'#a259ff','Combo 140g':'#7b3dcc','4 por R$99':'#c87eff','4 por R$119':'#5c1fa8','2x1':'#e040fb'}; totCur = buildTotals(getProducts(), 'Promo',promoSubcat,subcats, getChanRatio);      tot25 = buildTotals(prods25,'Promo',promoSubcat,subcats, getChanRatio); }
   else { subcats = AUV_CATS; subColors = CAT_COLORS; totCur = buildAllCatTotals(getProducts(), getChanRatio); tot25 = buildAllCatTotals(prods25, getChanRatio); }
 
@@ -7672,7 +7672,7 @@ function displayCat(cat, name, platform) {
   }
   if (cat === 'Burger' || cat === 'Hot Dog') return 'Burger';
   if (cat === 'Fritas' || cat === 'Porções') return 'Entradas';
-  if (cat === 'Bebidas') return 'Bebidas';
+  if (cat === 'Bebidas') { const _n = (name||'').toLowerCase(); if (_n.includes('milk shake') || _n.includes('milkshake')) return 'Sobremesas'; return 'Bebidas'; }
   if (cat === 'Cervejas') return 'Cervejas';
   if (cat === 'Sobremesas') return 'Sobremesas';
   if (cat === 'Combo') return 'Burger';
@@ -8144,7 +8144,7 @@ function renderMixAuv() {
   const bebidasSubcat  = name => { const n = name.toLowerCase(); if (n.includes('água') || n.includes('agua') || n === 'h2o') return 'Água'; if (n.includes('fire fresh')) return 'Fire Fresh'; if (n.includes('milk shake') || n.includes('milkshake')) return 'Milk Shake'; return 'Refri'; };
   const cervejasSubcat = name => { const n = name.toLowerCase(); if (n.includes('ipa') || n === 'lager fire' || (n.includes('lager') && n.includes('fire')) || n === 'ipa fire') return 'Cerveja Fire'; return 'Outras'; };
   const promoSubcat    = name => { const n = name.toLowerCase(); if (n.includes('2x1') || n.includes('2 x 1')) return '2x1'; if (name.includes('4 por R$99')) return '4 por R$99'; if (name.includes('4 por R$119')) return '4 por R$119'; if (name.includes('100g')) return 'Combo 100g'; if (name.includes('140g')) return 'Combo 140g'; return name; };
-  const sobSubcat      = name => name.includes('Pudim') ? 'Pudim' : 'Brownie';
+  const sobSubcat      = name => { const _n = name.toLowerCase(); if (_n.includes('milk shake') || _n.includes('milkshake')) return 'Milk Shake'; return name.includes('Pudim') ? 'Pudim' : 'Brownie'; };
 
   // ── Build monthly totals for a given products set, cat, and classifier ──
   const buildTotals = (prodsObj, catName, classifier, subcats, ratioFn) => {
@@ -8465,9 +8465,9 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25,'Entradas',entradasSubcat,subcats, getChanRatio);
     }
   }
-  else if (catFilter === 'Bebidas')      { subcats = ['Refri','Água','Fire Fresh','Milk Shake'];                       subColors = {'Refri':'#4cc9f0','Água':'#22b4d6','Fire Fresh':'#e03a0e','Milk Shake':'#9b59b6'}; totCur = buildTotals(getProducts(), 'Bebidas',bebidasSubcat,subcats, getChanRatio);   tot25 = buildTotals(prods25,'Bebidas',bebidasSubcat,subcats, getChanRatio); }
+  else if (catFilter === 'Bebidas')      { subcats = ['Refri','Água','Fire Fresh'];                                    subColors = {'Refri':'#4cc9f0','Água':'#22b4d6','Fire Fresh':'#e03a0e'}; totCur = buildTotals(getProducts(), 'Bebidas',bebidasSubcat,subcats, getChanRatio);   tot25 = buildTotals(prods25,'Bebidas',bebidasSubcat,subcats, getChanRatio); }
   else if (catFilter === 'Cervejas')     { subcats = ['Cerveja Fire','Outras'];                                        subColors = {'Cerveja Fire':'#e03a0e','Outras':'#ff8c42'}; totCur = buildTotals(getProducts(), 'Cervejas',cervejasSubcat,subcats, getChanRatio);  tot25 = buildTotals(prods25,'Cervejas',cervejasSubcat,subcats, getChanRatio); }
-  else if (catFilter === 'Sobremesas')   { subcats = ['Pudim','Brownie'];                                              subColors = {'Pudim':'#ff77a0','Brownie':'#c0392b'}; totCur = buildTotals(getProducts(), 'Sobremesas',sobSubcat,subcats, getChanRatio);     tot25 = buildTotals(prods25,'Sobremesas',sobSubcat,subcats, getChanRatio); }
+  else if (catFilter === 'Sobremesas')   { subcats = ['Pudim','Brownie','Milk Shake'];                               subColors = {'Pudim':'#ff77a0','Brownie':'#c0392b','Milk Shake':'#9b59b6'}; totCur = buildTotals(getProducts(), 'Sobremesas',sobSubcat,subcats, getChanRatio);     tot25 = buildTotals(prods25,'Sobremesas',sobSubcat,subcats, getChanRatio); }
   else if (catFilter === 'Promo')        { subcats = ['Combo 100g','Combo 140g','4 por R$99','4 por R$119','2x1'];     subColors = {'Combo 100g':'#a259ff','Combo 140g':'#7b3dcc','4 por R$99':'#c87eff','4 por R$119':'#5c1fa8','2x1':'#e040fb'}; totCur = buildTotals(getProducts(), 'Promo',promoSubcat,subcats, getChanRatio);      tot25 = buildTotals(prods25,'Promo',promoSubcat,subcats, getChanRatio); }
   else { subcats = AUV_CATS; subColors = CAT_COLORS; totCur = buildAllCatTotals(getProducts(), getChanRatio); tot25 = buildAllCatTotals(prods25, getChanRatio); }
 
