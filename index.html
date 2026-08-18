@@ -4789,6 +4789,12 @@ function renderMixAuv() {
         if (correct == null) return;
         totCur[m]['Burger'] = correct;
       });
+      const ENTRADAS_QTY_2026 = {'07':1161};
+      ALL_MN.forEach(m => {
+        const correct = ENTRADAS_QTY_2026[m];
+        if (correct == null) return;
+        totCur[m]['Entradas'] = correct;
+      });
     }
   } else if (catFilter === 'Burger') {
     const burgerSub = document.getElementById('mix-auv-burgersub')?.value || 'all';
@@ -8385,6 +8391,12 @@ function renderMixAuv() {
         const correct = BURGER_QTY_2026[m];
         if (correct == null) return;
         totCur[m]['Burger'] = correct;
+      });
+      const ENTRADAS_QTY_2026 = {'07':1161};
+      ALL_MN.forEach(m => {
+        const correct = ENTRADAS_QTY_2026[m];
+        if (correct == null) return;
+        totCur[m]['Entradas'] = correct;
       });
     }
   } else if (catFilter === 'Burger') {
