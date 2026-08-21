@@ -5473,9 +5473,9 @@ function computeChannelMixProducts(monthFilter, yearFilter, dayFilter) {
     };
 
     const list = Object.entries(CP).map(([name, d]) => {
-      const salaoFull = d.salao||0, ifoodFull = d.ifood||0, food99Full = d.food99||0;
-      const totalFull = salaoFull + ifoodFull + food99Full;
-      let salao = salaoFull, ifood = ifoodFull, food99 = food99Full;
+      const salaoFull = d.salao||0, ifoodFull = d.ifood||0, food99Full = d.food99||0, keetaFull = d.keeta||0;
+      const totalFull = salaoFull + ifoodFull + food99Full + keetaFull;
+      let salao = salaoFull, ifood = ifoodFull, food99 = food99Full, keeta = keetaFull;
       if (monthFilter !== 'all') {
         const prod = fuzzyMatch(name);
         if (prod && prod.dates) {
@@ -5488,14 +5488,16 @@ function computeChannelMixProducts(monthFilter, yearFilter, dayFilter) {
           salao  = Math.round(salaoFull  * ratio);
           ifood  = Math.round(ifoodFull  * ratio);
           food99 = Math.round(food99Full * ratio);
+          keeta  = Math.round(keetaFull  * ratio);
         } else {
           // Fallback: proporcional à receita do mês
           salao  = Math.round(salaoFull  * monthRevPct);
           ifood  = Math.round(ifoodFull  * monthRevPct);
           food99 = Math.round(food99Full * monthRevPct);
+          keeta  = Math.round(keetaFull  * monthRevPct);
         }
       }
-      return { name, salao, ifood, food99, cat: displayCat(d.cat, name), size: d.size||'', cname: d.cname||name, matched: true };
+      return { name, salao, ifood, food99, keeta, cat: displayCat(d.cat, name), size: d.size||'', cname: d.cname||name, matched: true };
     });
     return { list, mode: 'real', anyUnmatched: false };
   }
@@ -6887,7 +6889,7 @@ function renderFollowup() {
       const tot = tS+tD||1;
       return { salao: Math.round(_julForeEvFixed*tS/tot), delivery: Math.round(_julForeEvFixed*tD/tot), evento: 0 };
     }
-    return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0), evento: 0 };
+    return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0)+(d.keeta_val||0), evento: 0 };
   };
   const _chanSplit25 = (m) => {
     const d = rm25[m] || {};
@@ -9139,9 +9141,9 @@ function computeChannelMixProducts(monthFilter, yearFilter, dayFilter) {
     };
 
     const list = Object.entries(CP).map(([name, d]) => {
-      const salaoFull = d.salao||0, ifoodFull = d.ifood||0, food99Full = d.food99||0;
-      const totalFull = salaoFull + ifoodFull + food99Full;
-      let salao = salaoFull, ifood = ifoodFull, food99 = food99Full;
+      const salaoFull = d.salao||0, ifoodFull = d.ifood||0, food99Full = d.food99||0, keetaFull = d.keeta||0;
+      const totalFull = salaoFull + ifoodFull + food99Full + keetaFull;
+      let salao = salaoFull, ifood = ifoodFull, food99 = food99Full, keeta = keetaFull;
       if (monthFilter !== 'all') {
         const prod = fuzzyMatch(name);
         if (prod && prod.dates) {
@@ -9154,14 +9156,16 @@ function computeChannelMixProducts(monthFilter, yearFilter, dayFilter) {
           salao  = Math.round(salaoFull  * ratio);
           ifood  = Math.round(ifoodFull  * ratio);
           food99 = Math.round(food99Full * ratio);
+          keeta  = Math.round(keetaFull  * ratio);
         } else {
           // Fallback: proporcional à receita do mês
           salao  = Math.round(salaoFull  * monthRevPct);
           ifood  = Math.round(ifoodFull  * monthRevPct);
           food99 = Math.round(food99Full * monthRevPct);
+          keeta  = Math.round(keetaFull  * monthRevPct);
         }
       }
-      return { name, salao, ifood, food99, cat: displayCat(d.cat, name), size: d.size||'', cname: d.cname||name, matched: true };
+      return { name, salao, ifood, food99, keeta, cat: displayCat(d.cat, name), size: d.size||'', cname: d.cname||name, matched: true };
     });
     return { list, mode: 'real', anyUnmatched: false };
   }
@@ -10553,7 +10557,7 @@ function renderFollowup() {
       const tot = tS+tD||1;
       return { salao: Math.round(_julForeEvFixed*tS/tot), delivery: Math.round(_julForeEvFixed*tD/tot), evento: 0 };
     }
-    return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0), evento: 0 };
+    return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0)+(d.keeta_val||0), evento: 0 };
   };
   const _chanSplit25 = (m) => {
     const d = rm25[m] || {};
@@ -11482,7 +11486,7 @@ function renderDailyChart() {
   const multiMonth = moMin !== moMax;
   const labels   = days.map(([d]) => multiMonth ? d.slice(0,5) : d.slice(0,2)+'/'+d.slice(3,5));
   const salao    = days.map(([,v]) => v.salao  || 0);
-  const delivery = days.map(([,v]) => (v.ifood||0) + (v.food99||0));
+  const delivery = days.map(([,v]) => (v.ifood||0) + (v.food99||0) + (v.keeta||0));
   const totals   = salao.map((s,i) => s + delivery[i]);
 
   const fmtK = v => v >= 1000 ? 'R$' + (v/1000).toFixed(1) + 'k' : 'R$' + Math.round(v);
