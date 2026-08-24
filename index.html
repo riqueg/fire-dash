@@ -6938,7 +6938,7 @@ function renderFollowup() {
       },
       // ── 2026 direita ──────────────────────────────────────────────
       { label: '🏠 Salão 2026', data: s26d,
-        backgroundColor: MN_SSS.map(m => (m==='07'||m==='08') ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
+        backgroundColor: MN_SSS.map(m => m==='08' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
         borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
         datalabels: { display: ctx => s26d[ctx.dataIndex] > 0 && sss26[ctx.dataIndex] > 0,
@@ -6947,7 +6947,7 @@ function renderFollowup() {
           anchor: 'center', align: 'center' }
       },
       { label: '🛵 Delivery 2026', data: d26d,
-        backgroundColor: MN_SSS.map(m => (m==='07'||m==='08') ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
+        backgroundColor: MN_SSS.map(m => m==='08' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
         borderRadius: MN_SSS.map((_,i) => e26d[i] > 0 ? 0 : 3),
         barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
@@ -7004,11 +7004,11 @@ function renderFollowup() {
   const sssBody = document.getElementById('fu-sss-body');
   if (sssBody) sssBody.innerHTML = MN_SSS.map((m,i) => {
     const v26=sss26[i], v25=sss25[i], pct=sssPct[i];
-    const isFore = m==='07' || m==='08';
-    const _rowBg  = (m==='07'||m==='08') ? 'background:rgba(34,197,94,0.04)' : '';
+    const isFore = m==='08';
+    const _rowBg  = m==='08' ? 'background:rgba(34,197,94,0.04)' : '';
     return `<tr style="border-bottom:1px solid var(--border);${_rowBg}">
       <td style="padding:6px 8px;font-weight:700">${MN_FULL[m]}${isFore?' <span style="font-size:10px;color:var(--muted)">(proj.)</span>':''}</td>
-      <td style="padding:6px 8px;text-align:right;font-weight:700;color:${(m==='07'||m==='08')?'#22c55e':'var(--accent)'}">${fmtR(v26)}</td>
+      <td style="padding:6px 8px;text-align:right;font-weight:700;color:${m==='08'?'#22c55e':'var(--accent)'}">${fmtR(v26)}</td>
       <td style="padding:6px 8px;text-align:right;color:var(--muted)">${fmtR(v25)}</td>
       <td style="padding:6px 8px;text-align:right;font-weight:700;color:${pct>=0?'#06d6a0':'#ff4444'}">${pct>=0?'+':''}${pct}%</td>
       <td style="padding:6px 8px;text-align:right">${rm26[m]?.ticket>0?fmtR(rm26[m].ticket):'—'}</td>
@@ -10606,7 +10606,7 @@ function renderFollowup() {
       },
       // ── 2026 direita ──────────────────────────────────────────────
       { label: '🏠 Salão 2026', data: s26d,
-        backgroundColor: MN_SSS.map(m => (m==='07'||m==='08') ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
+        backgroundColor: MN_SSS.map(m => m==='08' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
         borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
         datalabels: { display: ctx => s26d[ctx.dataIndex] > 0 && sss26[ctx.dataIndex] > 0,
@@ -10615,7 +10615,7 @@ function renderFollowup() {
           anchor: 'center', align: 'center' }
       },
       { label: '🛵 Delivery 2026', data: d26d,
-        backgroundColor: MN_SSS.map(m => (m==='07'||m==='08') ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
+        backgroundColor: MN_SSS.map(m => m==='08' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
         borderRadius: MN_SSS.map((_,i) => e26d[i] > 0 ? 0 : 3),
         barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
@@ -10672,11 +10672,11 @@ function renderFollowup() {
   const sssBody = document.getElementById('fu-sss-body');
   if (sssBody) sssBody.innerHTML = MN_SSS.map((m,i) => {
     const v26=sss26[i], v25=sss25[i], pct=sssPct[i];
-    const isFore = m==='07' || m==='08';
-    const _rowBg  = (m==='07'||m==='08') ? 'background:rgba(34,197,94,0.04)' : '';
+    const isFore = m==='08';
+    const _rowBg  = m==='08' ? 'background:rgba(34,197,94,0.04)' : '';
     return `<tr style="border-bottom:1px solid var(--border);${_rowBg}">
       <td style="padding:6px 8px;font-weight:700">${MN_FULL[m]}${isFore?' <span style="font-size:10px;color:var(--muted)">(proj.)</span>':''}</td>
-      <td style="padding:6px 8px;text-align:right;font-weight:700;color:${(m==='07'||m==='08')?'#22c55e':'var(--accent)'}">${fmtR(v26)}</td>
+      <td style="padding:6px 8px;text-align:right;font-weight:700;color:${m==='08'?'#22c55e':'var(--accent)'}">${fmtR(v26)}</td>
       <td style="padding:6px 8px;text-align:right;color:var(--muted)">${fmtR(v25)}</td>
       <td style="padding:6px 8px;text-align:right;font-weight:700;color:${pct>=0?'#06d6a0':'#ff4444'}">${pct>=0?'+':''}${pct}%</td>
       <td style="padding:6px 8px;text-align:right">${rm26[m]?.ticket>0?fmtR(rm26[m].ticket):'—'}</td>
