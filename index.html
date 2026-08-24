@@ -6860,6 +6860,7 @@ function renderFollowup() {
   // ── SSS mensal (Jan–Jun real + Julho forecast) ───────────────────────
   const _juneEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='06'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _juneForeWithEvFixed = juneForeTotal + _juneEvFixed;
+  const _julEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _julForeEvFixed = getActiveForecastMonth(activeYear, '07').metaTotal
     + (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const MN_SSS = ['01','02','03','04','05','06','07','08'];
@@ -6883,11 +6884,13 @@ function renderFollowup() {
       return { salao: Math.round(base*sMix), delivery: Math.round(base*dMix), evento: ev };
     }
     if (m === '07') {
-      const mn6 = ['01','02','03','04','05','06'];
-      const tS  = mn6.reduce((s,mm)=>s+(rm26[mm]?.salao_val||0),0);
-      const tD  = mn6.reduce((s,mm)=>s+((rm26[mm]?.ifood_val||0)+(rm26[mm]?.food99_val||0)),0);
-      const tot = tS+tD||1;
-      return { salao: Math.round(_julForeEvFixed*tS/tot), delivery: Math.round(_julForeEvFixed*tD/tot), evento: 0 };
+      const ev7 = _julEvFixed;
+      const base7 = _julForeEvFixed - ev7;
+      const d07 = rm26['07'] || {};
+      const opTot07 = d07.total || 0;
+      const sMix7 = opTot07 > 0 ? (d07.salao_val||0)/opTot07 : 0.50;
+      const dMix7 = opTot07 > 0 ? ((d07.ifood_val||0)+(d07.food99_val||0)+(d07.keeta_val||0))/opTot07 : 0.50;
+      return { salao: Math.round(base7*sMix7), delivery: Math.round(base7*dMix7), evento: ev7 };
     }
     return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0)+(d.keeta_val||0), evento: 0 };
   };
@@ -10528,6 +10531,7 @@ function renderFollowup() {
   // ── SSS mensal (Jan–Jun real + Julho forecast) ───────────────────────
   const _juneEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='06'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _juneForeWithEvFixed = juneForeTotal + _juneEvFixed;
+  const _julEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _julForeEvFixed = getActiveForecastMonth(activeYear, '07').metaTotal
     + (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const MN_SSS = ['01','02','03','04','05','06','07','08'];
@@ -10551,11 +10555,13 @@ function renderFollowup() {
       return { salao: Math.round(base*sMix), delivery: Math.round(base*dMix), evento: ev };
     }
     if (m === '07') {
-      const mn6 = ['01','02','03','04','05','06'];
-      const tS  = mn6.reduce((s,mm)=>s+(rm26[mm]?.salao_val||0),0);
-      const tD  = mn6.reduce((s,mm)=>s+((rm26[mm]?.ifood_val||0)+(rm26[mm]?.food99_val||0)),0);
-      const tot = tS+tD||1;
-      return { salao: Math.round(_julForeEvFixed*tS/tot), delivery: Math.round(_julForeEvFixed*tD/tot), evento: 0 };
+      const ev7 = _julEvFixed;
+      const base7 = _julForeEvFixed - ev7;
+      const d07 = rm26['07'] || {};
+      const opTot07 = d07.total || 0;
+      const sMix7 = opTot07 > 0 ? (d07.salao_val||0)/opTot07 : 0.50;
+      const dMix7 = opTot07 > 0 ? ((d07.ifood_val||0)+(d07.food99_val||0)+(d07.keeta_val||0))/opTot07 : 0.50;
+      return { salao: Math.round(base7*sMix7), delivery: Math.round(base7*dMix7), evento: ev7 };
     }
     return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0)+(d.keeta_val||0), evento: 0 };
   };
