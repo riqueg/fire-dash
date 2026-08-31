@@ -6329,7 +6329,7 @@ function renderFollowup() {
        &nbsp;&nbsp;|&nbsp;&nbsp;
        <span style="color:var(--muted)">vs ${_anoAtivo-1}:</span> <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Mix:</span> Salão <strong>${fmt(_salaoP,1)}%</strong> &nbsp;·&nbsp; iFood <strong>${fmt(_ifoodP,1)}%</strong> &nbsp;·&nbsp; 99food <strong>${fmt(_f99P,1)}%</strong>${_keetaP > 0 ? ` &nbsp;·&nbsp; Keeta <strong>${fmt(_keetaP,1)}%</strong>` : ''}
+       <span style="color:var(--muted)">Mix:</span> Salão <strong>${fmt(_salaoP,1)}%</strong> &nbsp;·&nbsp; Delivery <strong>${fmt(_ifoodP+_f99P+_keetaP,1)}%</strong>
        &nbsp;&nbsp;|&nbsp;&nbsp;
        <span style="color:var(--muted)">Média/dia:</span> <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
        `
@@ -10001,7 +10001,7 @@ function renderFollowup() {
        &nbsp;&nbsp;|&nbsp;&nbsp;
        <span style="color:var(--muted)">vs ${_anoAtivo-1}:</span> <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Mix:</span> Salão <strong>${fmt(_salaoP,1)}%</strong> &nbsp;·&nbsp; iFood <strong>${fmt(_ifoodP,1)}%</strong> &nbsp;·&nbsp; 99food <strong>${fmt(_f99P,1)}%</strong>${_keetaP > 0 ? ` &nbsp;·&nbsp; Keeta <strong>${fmt(_keetaP,1)}%</strong>` : ''}
+       <span style="color:var(--muted)">Mix:</span> Salão <strong>${fmt(_salaoP,1)}%</strong> &nbsp;·&nbsp; Delivery <strong>${fmt(_ifoodP+_f99P+_keetaP,1)}%</strong>
        &nbsp;&nbsp;|&nbsp;&nbsp;
        <span style="color:var(--muted)">Média/dia:</span> <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
        `
