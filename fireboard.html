@@ -24,8 +24,7 @@
 
   const fbApp = initializeApp(firebaseConfig);
   window.__fireboardDb = getFirestore(fbApp);
-  window.__fireboardDoc = doc(window.__fireboardDb, "fireboard", "main");
-  window.__fireboardApi = { getDoc, setDoc, onSnapshot };
+  window.__fireboardApi = { getDoc, setDoc, onSnapshot, doc };
   window.__fireboardReady = true;
   window.dispatchEvent(new Event("fireboard-firebase-ready"));
 </script>
@@ -56,7 +55,6 @@
   }
   .wrap{max-width:1600px;margin:0 auto;}
 
-  /* ---------- Header ---------- */
   header{
     display:flex;
     align-items:flex-end;
@@ -117,7 +115,6 @@
     font-size:11.5px; color:var(--cream-dim); align-self:center; margin-right:6px; min-width:120px;
   }
 
-  /* ---------- Section shell ---------- */
   section{
     background:var(--char-800);
     border:1px solid var(--line);
@@ -143,7 +140,6 @@
     background:linear-gradient(90deg, var(--line), transparent);
   }
 
-  /* ---------- Delivery banner + table ---------- */
   .delivery-banner{
     background:var(--ember);
     color:#fff;
@@ -184,7 +180,6 @@
   }
   table.delivery-table td input:focus{background:#FDEEE3; border-radius:4px;}
 
-  /* ---------- Meta bar ---------- */
   .meta-grid{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -208,14 +203,12 @@
   input:focus, select:focus{outline:none; border-color:var(--ember); background:#FDEEE3;}
   input.readonly{color:var(--cream-dim); background:#F2ECE3;}
 
-  /* ---------- Body layout: table on top, sidebar below ---------- */
   .board-body{
     display:flex;
     flex-direction:column;
     gap:22px;
   }
 
-  /* ---------- Daily table ---------- */
   .halves{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px;}
   .table-scroll{overflow-x:auto; border-radius:8px; border:1px solid var(--line);}
   table.daily{
@@ -318,7 +311,6 @@
   table.daily tr.total-row td{background:var(--char-600); font-weight:700; color:var(--flame-gold);}
   table.daily td input.nota{width:76px; font-family:'Inter',sans-serif; text-align:left;}
 
-  /* ---------- Sidebar cards (abaixo da tabela, em grade) ---------- */
   .sidebar{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
@@ -373,7 +365,6 @@
     h1{font-size:32px;}
   }
 
-  /* ---------- Print: 100cm x 50cm, mirrors physical board ---------- */
   @media print{
     @page{ size: 100cm 50cm; margin: 8mm; }
     body{padding:0; background:#fff; color:#111;}
@@ -418,7 +409,6 @@
     </div>
   </header>
 
-  <!-- ============ METAS GERAIS ============ -->
   <section>
     <div class="sec-title">Metas do Mês</div>
     <div class="meta-grid">
@@ -429,7 +419,6 @@
     </div>
   </section>
 
-  <!-- ============ VENDAS DIÁRIAS ============ -->
   <section>
     <div class="sec-title">Vendas Delivery — Dia a Dia</div>
     <label class="toggle-segunda">
@@ -442,7 +431,6 @@
     </div>
   </section>
 
-  <!-- ============ DELIVERY (por canal) ============ -->
   <section>
     <div class="delivery-banner">DELIVERY <span class="arrow">↓</span></div>
     <div class="table-scroll">
@@ -495,9 +483,6 @@
 </div>
 
 <script>
-/* =========================================================
-   MODELO DE DADOS
-   ========================================================= */
 function defaultData(){
   const days = [];
   for(let d=1; d<=31; d++){
@@ -555,8 +540,20 @@ function setStatus(text){
   document.getElementById("saveStatus").textContent = text;
 }
 
+function currentMonthKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function monthDocRef(mes){
+  const { doc } = window.__fireboardApi;
+  const safeMes = (mes && /^\d{4}-\d{2}$/.test(mes)) ? mes : "sem-mes";
+  return doc(window.__fireboardDb, "fireboard", safeMes);
+}
+
+let activeMonthRef = null;
+let unsubscribeCurrent = null;
+
 let saveTimeout = null;
-let pendingRemoteRender = false;
 
 function save(){
   setStatus("Salvando...");
@@ -566,19 +563,23 @@ function save(){
 
 function flushSave(){
   const { setDoc } = window.__fireboardApi;
-  setDoc(window.__fireboardDoc, DATA)
+  if(!activeMonthRef) return;
+  setDoc(activeMonthRef, DATA)
     .then(()=> setStatus("Sincronizado com todos ✓"))
     .catch(err=>{ console.error("Falha ao salvar no Firestore", err); setStatus("Erro ao salvar — verifique a conexão"); });
 }
 
+let pendingRemoteRender = false;
+
 function listenRemoteChanges(){
   const { onSnapshot } = window.__fireboardApi;
-  onSnapshot(window.__fireboardDoc, (snap)=>{
-    if(snap.metadata.hasPendingWrites) return; // eco da própria escrita local
+  if(unsubscribeCurrent){ unsubscribeCurrent(); unsubscribeCurrent = null; }
+  unsubscribeCurrent = onSnapshot(activeMonthRef, (snap)=>{
+    if(snap.metadata.hasPendingWrites) return;
     if(!snap.exists()) return;
     DATA = mergeWithDefaults(snap.data());
     const active = document.activeElement;
-    const isEditing = active && active.tagName === "INPUT" && document.body.contains(active);
+    const isEditing = active && active.tagName === "INPUT" && document.body.contains(active) && active.id !== "mesRef";
     if(isEditing){
       pendingRemoteRender = true;
     } else {
@@ -598,21 +599,33 @@ document.addEventListener("focusout", (e)=>{
   }
 });
 
-async function initFireboard(){
-  setStatus("Carregando...");
+async function switchToMonth(mes){
+  if(unsubscribeCurrent){ unsubscribeCurrent(); unsubscribeCurrent = null; }
   const { getDoc, setDoc } = window.__fireboardApi;
+  activeMonthRef = monthDocRef(mes);
+  setStatus("Carregando...");
   try{
-    const snap = await getDoc(window.__fireboardDoc);
+    const snap = await getDoc(activeMonthRef);
     if(snap.exists()){
       DATA = mergeWithDefaults(snap.data());
+      DATA.mesRef = mes;
     } else {
-      await setDoc(window.__fireboardDoc, DATA);
+      DATA = defaultData();
+      DATA.mesRef = mes;
+      await setDoc(activeMonthRef, DATA);
     }
   }catch(e){
-    console.error("Falha ao carregar dados do Firestore, iniciando em branco.", e);
+    console.error("Falha ao carregar dados do mês, iniciando em branco.", e);
+    DATA = defaultData();
+    DATA.mesRef = mes;
   }
   renderAll();
   listenRemoteChanges();
+}
+
+async function initFireboard(){
+  const mesInicial = currentMonthKey();
+  await switchToMonth(mesInicial);
 }
 
 function num(v){
@@ -628,16 +641,13 @@ function fmtPct(n){
   return n.toLocaleString('pt-BR', {minimumFractionDigits:1, maximumFractionDigits:1}) + "%";
 }
 
-/* =========================================================
-   TABELA DE METAS GERAIS
-   ========================================================= */
 const WEEKDAYS_ABBR = ["dom","seg","ter","qua","qui","sex","sáb"];
 function dateForDay(day){
   if(!DATA.mesRef) return null;
   const [y, m] = DATA.mesRef.split("-").map(Number);
   if(!y || !m) return null;
   const date = new Date(y, m-1, day);
-  if(date.getMonth() !== m-1) return null; // dia nao existe nesse mes (ex: 30/31 fev)
+  if(date.getMonth() !== m-1) return null;
   return date;
 }
 function weekdayAbbr(day){
@@ -650,15 +660,19 @@ function isMonday(day){
 }
 
 function bindTopFields(){
-  const map = {mesRef:"mesRef", metaMensal:"metaMensal", metaSalaoGeral:"metaSalaoGeral", metaDeliveryGeral:"metaDeliveryGeral"};
+  const map = {metaMensal:"metaMensal", metaSalaoGeral:"metaSalaoGeral", metaDeliveryGeral:"metaDeliveryGeral"};
   Object.entries(map).forEach(([key, id])=>{
     const el = document.getElementById(id);
     el.value = DATA[key];
-    el.addEventListener("input", ()=>{
-      DATA[key] = el.value;
-      save();
-      if(key === "mesRef") buildDailyTables();
-    });
+    el.addEventListener("input", ()=>{ DATA[key] = el.value; save(); });
+  });
+
+  const mesEl = document.getElementById("mesRef");
+  mesEl.value = DATA.mesRef;
+  mesEl.addEventListener("change", ()=>{
+    const novoMes = mesEl.value;
+    if(!novoMes || novoMes === DATA.mesRef) return;
+    switchToMonth(novoMes);
   });
 }
 
@@ -685,9 +699,6 @@ function bindDeliveryTable(){
   });
 }
 
-/* =========================================================
-   TABELA DIÁRIA (duas metades: dias 1-16 e 17-31)
-   ========================================================= */
 function buildDailyHalf(startDay, endDay, label){
   const wrap = document.createElement("div");
   const scroll = document.createElement("div");
@@ -737,7 +748,6 @@ function buildDailyHalf(startDay, endDay, label){
     recalcRow(tr, d);
   }
 
-  // linha de total do bloco
   const trTotal = document.createElement("tr");
   trTotal.className = "total-row";
   trTotal.innerHTML = `
@@ -786,7 +796,6 @@ function recalcRow(tr, d){
   colorDif(pctCell, metaTotal, realTotal, difTotal);
 }
 
-// Verde quando Real >= Meta, vermelho quando Real < Meta. Sem cor se os dois campos estão vazios/zerados.
 function colorDif(cell, metaVal, realVal, difVal){
   cell.classList.remove("pos","neg");
   if(metaVal !== 0 || realVal !== 0){
@@ -840,14 +849,10 @@ function buildDailyTables(){
   recalcBlockTotals(halfB);
 }
 
-/* =========================================================
-   SIDEBAR: AUV, CMV, AVALIAÇÃO, MÉTRICAS SOLTAS
-   ========================================================= */
 function buildSidebar(){
   const box = document.getElementById("sidebarExtra");
   box.innerHTML = "";
 
-  // ---- AUV ----
   const cardAuv = document.createElement("div");
   cardAuv.className = "card";
   cardAuv.innerHTML = `
@@ -866,20 +871,17 @@ function buildSidebar(){
     save();
   });
 
-  // ---- CMV ----
   const cardCmv = document.createElement("div");
   cardCmv.className = "card";
   cardCmv.innerHTML = `<h3>CMV Real</h3>` + buildWeeklyMiniTable("cmv", "Meta %");
   box.appendChild(cardCmv);
   bindWeeklyMiniTable(cardCmv, "cmv");
 
-  // ---- Avaliação Google ----
   const cardAval = document.createElement("div");
   cardAval.className = "card";
   cardAval.innerHTML = `<h3>Avaliação Google</h3>` + buildWeeklyMiniTable("avaliacao", "Meta");
   box.appendChild(cardAval);
   bindWeeklyMiniTable(cardAval, "avaliacao");
-
 }
 
 function renderAuvRows(){
@@ -946,22 +948,17 @@ function bindWeeklyMiniTable(card, key){
   });
 }
 
-/* =========================================================
-   AÇÃO: exportar tudo para Excel
-   ========================================================= */
 document.getElementById("btnExportExcel").addEventListener("click", exportToExcel);
 
 function exportToExcel(){
   const wb = XLSX.utils.book_new();
 
-  // ---- Metas do Mês ----
   const metasSheet = XLSX.utils.aoa_to_sheet([
     ["Mês", "Meta Mensal (R$)", "Meta Salão (R$/dia)", "Meta Delivery Total (R$/dia)"],
     [DATA.mesRef, num(DATA.metaMensal), num(DATA.metaSalaoGeral), num(DATA.metaDeliveryGeral)]
   ]);
   XLSX.utils.book_append_sheet(wb, metasSheet, "Metas do Mês");
 
-  // ---- Vendas Diárias ----
   const diasRows = [
     ["Dia","Meta Total","Meta Salão","Meta Delivery","Real Total","Real Salão","Real Delivery","Dif Total","Dif Salão","Dif Delivery","Dif %","Nota"]
   ];
@@ -975,7 +972,6 @@ function exportToExcel(){
   const diasSheet = XLSX.utils.aoa_to_sheet(diasRows);
   XLSX.utils.book_append_sheet(wb, diasSheet, "Vendas Diárias");
 
-  // ---- Delivery (por canal) ----
   const deliveryLabels = {
     nota:"Nota", tempoPreparo:"Tempo de preparo (min)", tempoLojaAberta:"Tempo de loja aberta (%)",
     cancelamento:"Cancelamento (%)", perdasAjustes:"Perdas e ajustes (%)"
@@ -988,20 +984,17 @@ function exportToExcel(){
   const deliverySheet = XLSX.utils.aoa_to_sheet(deliveryRows);
   XLSX.utils.book_append_sheet(wb, deliverySheet, "Delivery");
 
-  // ---- AUV ----
   const auvRows = [["Produto","Meta","S1","S2","S3","S4"]];
   DATA.auv.forEach(r=> auvRows.push([r.produto, num(r.meta), num(r.s1), num(r.s2), num(r.s3), num(r.s4)]));
   const auvSheet = XLSX.utils.aoa_to_sheet(auvRows);
   XLSX.utils.book_append_sheet(wb, auvSheet, "AUV");
 
-  // ---- CMV Real ----
   const cmvSheet = XLSX.utils.aoa_to_sheet([
     ["Meta %","S1","S2","S3","S4","Acumulado"],
     [num(DATA.cmv.meta), num(DATA.cmv.s1), num(DATA.cmv.s2), num(DATA.cmv.s3), num(DATA.cmv.s4), num(DATA.cmv.acumulado)]
   ]);
   XLSX.utils.book_append_sheet(wb, cmvSheet, "CMV Real");
 
-  // ---- Avaliação Google ----
   const avalSheet = XLSX.utils.aoa_to_sheet([
     ["Meta","S1","S2","S3","S4","Acumulado"],
     [num(DATA.avaliacao.meta), num(DATA.avaliacao.s1), num(DATA.avaliacao.s2), num(DATA.avaliacao.s3), num(DATA.avaliacao.s4), num(DATA.avaliacao.acumulado)]
@@ -1012,9 +1005,6 @@ function exportToExcel(){
   XLSX.writeFile(wb, `fireboard_${mesTag}.xlsx`);
 }
 
-/* =========================================================
-   RENDER GERAL
-   ========================================================= */
 function renderAll(){
   bindTopFields();
   bindOcultarSegunda();
