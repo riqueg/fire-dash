@@ -6181,10 +6181,12 @@ function renderFollowup() {
   const _salaoVal  = _foreDataForMon ? round2(_foreDataForMon.salao)  : (rm26[_mesNum]?.salao_val  || 0);
   const _ifoodVal  = _foreDataForMon ? round2(_foreDataForMon.ifood)  : (rm26[_mesNum]?.ifood_val  || 0);
   const _food99Val = _foreDataForMon ? round2(_foreDataForMon.food99) : (rm26[_mesNum]?.food99_val || 0);
-  const _storeOnly = _salaoVal + _ifoodVal + _food99Val + (rm26[_mesNum]?.keeta_val || 0);
-  const _salaoP    = _storeOnly > 0 ? _salaoVal/_storeOnly*100  : 0;
-  const _ifoodP    = _storeOnly > 0 ? _ifoodVal/_storeOnly*100  : 0;
-  const _f99P      = _storeOnly > 0 ? _food99Val/_storeOnly*100 : 0;
+  const _keetaVal  = rm26[_mesNum]?.keeta_val || 0;
+  const _storeOnly = _salaoVal + _ifoodVal + _food99Val + _keetaVal;
+  const _salaoP    = _storeOnly > 0 ? _salaoVal/_storeOnly*100   : 0;
+  const _ifoodP    = _storeOnly > 0 ? _ifoodVal/_storeOnly*100   : 0;
+  const _f99P      = _storeOnly > 0 ? _food99Val/_storeOnly*100  : 0;
+  const _keetaP    = _storeOnly > 0 ? _keetaVal/_storeOnly*100   : 0;
 
   // SSS vs 2025 (store-only, para comparação justa)
   const _june25Store = rm25[_mesNum]?.total || 0;
@@ -6319,18 +6321,17 @@ function renderFollowup() {
   ].join('\n');
   window._fuSummaryText = _headText;
   if (headEl) headEl.innerHTML = _isMesFechado
-    ? `<span style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">✅ Fechamento ${_MES_FULL[_mesNum]} ${_anoAtivo}</span>
-       &nbsp;·&nbsp;<strong>${fmtR(_storeOnly)}</strong> loja&nbsp;+&nbsp;<strong style="color:rgba(162,89,255,0.9)">${fmtR(_juneEvTotal)}</strong> eventos
+    ? `<span style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">✅ Fechamento ${_MES_FULL[_mesNum].slice(0,3)}'${String(_anoAtivo).slice(2)}</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
-       &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
-       &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>
+       <span style="color:var(--muted)">Faturamento:</span> <strong>${fmtR(_storeOnly)}</strong>${_juneEvTotal > 0 ? ` <span style="color:var(--muted)">+ ${fmtR(_juneEvTotal)} eventos</span>` : ''}
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">vs meta</span> <span style="color:${_vsMetaColor};font-weight:700">${_vsMetaSign}${fmt(_vsMetaPct,1)}%</span>
-       &nbsp;·&nbsp;<span style="color:var(--muted)">vs proj.</span> <span style="color:${_vsProjColor};font-weight:700">${_vsProjSign}${fmt(_vsProjPct,1)}%</span>
+       <span style="color:var(--muted)">Meta:</span> <span style="color:${_vsMetaColor};font-weight:700">${_vsMetaSign}${fmt(_vsMetaPct,1)}%</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       SSS loja <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span> vs ${_anoAtivo-1}
-       &nbsp;·&nbsp;Média/dia <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
+       <span style="color:var(--muted)">vs ${_anoAtivo-1}:</span> <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span>
+       &nbsp;&nbsp;|&nbsp;&nbsp;
+       <span style="color:var(--muted)">Mix:</span> Salão <strong>${fmt(_salaoP,1)}%</strong> &nbsp;·&nbsp; iFood <strong>${fmt(_ifoodP,1)}%</strong> &nbsp;·&nbsp; 99food <strong>${fmt(_f99P,1)}%</strong>${_keetaP > 0 ? ` &nbsp;·&nbsp; Keeta <strong>${fmt(_keetaP,1)}%</strong>` : ''}
+       &nbsp;&nbsp;|&nbsp;&nbsp;
+       <span style="color:var(--muted)">Média/dia:</span> <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
        `
     : _isMonthForecast
     ? `<span style="font-size:13px;font-weight:800;color:#22c55e;text-transform:uppercase;letter-spacing:.5px">🎯 Expectativa ${_MES_FULL[_mesNum]} ${_anoAtivo}</span>
@@ -9852,10 +9853,12 @@ function renderFollowup() {
   const _salaoVal  = _foreDataForMon ? round2(_foreDataForMon.salao)  : (rm26[_mesNum]?.salao_val  || 0);
   const _ifoodVal  = _foreDataForMon ? round2(_foreDataForMon.ifood)  : (rm26[_mesNum]?.ifood_val  || 0);
   const _food99Val = _foreDataForMon ? round2(_foreDataForMon.food99) : (rm26[_mesNum]?.food99_val || 0);
-  const _storeOnly = _salaoVal + _ifoodVal + _food99Val + (rm26[_mesNum]?.keeta_val || 0);
-  const _salaoP    = _storeOnly > 0 ? _salaoVal/_storeOnly*100  : 0;
-  const _ifoodP    = _storeOnly > 0 ? _ifoodVal/_storeOnly*100  : 0;
-  const _f99P      = _storeOnly > 0 ? _food99Val/_storeOnly*100 : 0;
+  const _keetaVal  = rm26[_mesNum]?.keeta_val || 0;
+  const _storeOnly = _salaoVal + _ifoodVal + _food99Val + _keetaVal;
+  const _salaoP    = _storeOnly > 0 ? _salaoVal/_storeOnly*100   : 0;
+  const _ifoodP    = _storeOnly > 0 ? _ifoodVal/_storeOnly*100   : 0;
+  const _f99P      = _storeOnly > 0 ? _food99Val/_storeOnly*100  : 0;
+  const _keetaP    = _storeOnly > 0 ? _keetaVal/_storeOnly*100   : 0;
 
   // SSS vs 2025 (store-only, para comparação justa)
   const _june25Store = rm25[_mesNum]?.total || 0;
@@ -9990,18 +9993,17 @@ function renderFollowup() {
   ].join('\n');
   window._fuSummaryText = _headText;
   if (headEl) headEl.innerHTML = _isMesFechado
-    ? `<span style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">✅ Fechamento ${_MES_FULL[_mesNum]} ${_anoAtivo}</span>
-       &nbsp;·&nbsp;<strong>${fmtR(_storeOnly)}</strong> loja&nbsp;+&nbsp;<strong style="color:rgba(162,89,255,0.9)">${fmtR(_juneEvTotal)}</strong> eventos
+    ? `<span style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">✅ Fechamento ${_MES_FULL[_mesNum].slice(0,3)}'${String(_anoAtivo).slice(2)}</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
-       &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
-       &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>
+       <span style="color:var(--muted)">Faturamento:</span> <strong>${fmtR(_storeOnly)}</strong>${_juneEvTotal > 0 ? ` <span style="color:var(--muted)">+ ${fmtR(_juneEvTotal)} eventos</span>` : ''}
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">vs meta</span> <span style="color:${_vsMetaColor};font-weight:700">${_vsMetaSign}${fmt(_vsMetaPct,1)}%</span>
-       &nbsp;·&nbsp;<span style="color:var(--muted)">vs proj.</span> <span style="color:${_vsProjColor};font-weight:700">${_vsProjSign}${fmt(_vsProjPct,1)}%</span>
+       <span style="color:var(--muted)">Meta:</span> <span style="color:${_vsMetaColor};font-weight:700">${_vsMetaSign}${fmt(_vsMetaPct,1)}%</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       SSS loja <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span> vs ${_anoAtivo-1}
-       &nbsp;·&nbsp;Média/dia <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
+       <span style="color:var(--muted)">vs ${_anoAtivo-1}:</span> <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span>
+       &nbsp;&nbsp;|&nbsp;&nbsp;
+       <span style="color:var(--muted)">Mix:</span> Salão <strong>${fmt(_salaoP,1)}%</strong> &nbsp;·&nbsp; iFood <strong>${fmt(_ifoodP,1)}%</strong> &nbsp;·&nbsp; 99food <strong>${fmt(_f99P,1)}%</strong>${_keetaP > 0 ? ` &nbsp;·&nbsp; Keeta <strong>${fmt(_keetaP,1)}%</strong>` : ''}
+       &nbsp;&nbsp;|&nbsp;&nbsp;
+       <span style="color:var(--muted)">Média/dia:</span> <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
        `
     : _isMonthForecast
     ? `<span style="font-size:13px;font-weight:800;color:#22c55e;text-transform:uppercase;letter-spacing:.5px">🎯 Expectativa ${_MES_FULL[_mesNum]} ${_anoAtivo}</span>
