@@ -3215,20 +3215,34 @@ function getJulyForecast2026() {
   return { total, salao, ifood, food99, keeta };
 }
 
+function getSeptemberForecast2026() {
+  const { dias } = getActiveForecastMonth('2026', '09');
+  // Usa real_monthly["09"] para canais (dados reais acumulados)
+  const rm = (RAW.real_monthly || {})['09'] || {};
+  const salao  = rm.salao_val  || 0;
+  const ifood  = rm.ifood_val  || 0;
+  const food99 = rm.food99_val || 0;
+  const keeta  = rm.keeta_val  || 0;
+  const lastFore = [...dias].filter(d => d.cum_fore != null).pop();
+  const total = lastFore ? lastFore.cum_fore : (salao + ifood + food99 + keeta);
+  return { total, salao, ifood, food99, keeta };
+}
+
 if (typeof window._ovShowEventos === 'undefined') window._ovShowEventos = false;
 if (typeof window._chShowEvento === 'undefined') window._chShowEvento = false;
 function renderOverview() {
   const monthFilter = document.getElementById('month-filter').value;
 
-  // June 2026 forecast — substitui o total parcial pela projeção completa do mês
+  // June/July/September 2026 forecast — substitui o total parcial pela projeção completa do mês
   const juneFore = (activeYear === '2026') ? getJuneForecast2026() : null;
   const julFore  = (activeYear === '2026') ? getJulyForecast2026()  : null;
+  const sepFore  = (activeYear === '2026') ? getSeptemberForecast2026() : null;
   const _evMonth = m => (EVENTOS||[]).filter(e=>e.data.slice(3,5)===m&&e.data.endsWith('2026')).reduce((s,e)=>s+(e.valor||0),0);
-  const getMonthRev    = m => ((juneFore && m === '06') ? juneFore.total   : (julFore && m === '07') ? julFore.total   : (getRM()[m]?.total     || 0)) + _evMonth(m);
-  const getMonthSalao  = m => (juneFore && m === '06') ? juneFore.salao   : (julFore && m === '07') ? julFore.salao   : (getRM()[m]?.salao_val || 0);
-  const getMonthIfood  = m => (juneFore && m === '06') ? juneFore.ifood   : (julFore && m === '07') ? julFore.ifood   : (getRM()[m]?.ifood_val || 0);
-  const getMonthF99    = m => (juneFore && m === '06') ? juneFore.food99  : (julFore && m === '07') ? julFore.food99  : (getRM()[m]?.food99_val|| 0);
-  const getMonthKeeta  = m => (juneFore && m === '06') ? (juneFore.keeta||0) : (julFore && m === '07') ? (julFore.keeta||0) : (getRM()[m]?.keeta_val || 0);
+  const getMonthRev    = m => ((juneFore && m === '06') ? juneFore.total   : (julFore && m === '07') ? julFore.total   : (sepFore && m === '09') ? sepFore.total   : (getRM()[m]?.total     || 0)) + _evMonth(m);
+  const getMonthSalao  = m => (juneFore && m === '06') ? juneFore.salao   : (julFore && m === '07') ? julFore.salao   : (sepFore && m === '09') ? sepFore.salao   : (getRM()[m]?.salao_val || 0);
+  const getMonthIfood  = m => (juneFore && m === '06') ? juneFore.ifood   : (julFore && m === '07') ? julFore.ifood   : (sepFore && m === '09') ? sepFore.ifood   : (getRM()[m]?.ifood_val || 0);
+  const getMonthF99    = m => (juneFore && m === '06') ? juneFore.food99  : (julFore && m === '07') ? julFore.food99  : (sepFore && m === '09') ? sepFore.food99  : (getRM()[m]?.food99_val|| 0);
+  const getMonthKeeta  = m => (juneFore && m === '06') ? (juneFore.keeta||0) : (julFore && m === '07') ? (julFore.keeta||0) : (sepFore && m === '09') ? (sepFore.keeta||0) : (getRM()[m]?.keeta_val || 0);
   const _PROJ_CUP_07   = 1400;
   const getMonthCoupons = m => (julFore && m === '07') ? _PROJ_CUP_07 : (getRM()[m]?.coupons || 0);
 
@@ -3462,6 +3476,10 @@ function renderOverview() {
       if (m === '07' && activeYear === '2026' && julFore) {
         const realSum = curSalao[i] + curDelivery[i];
         return julFore.total > realSum ? round2(julFore.total - realSum) : 0;
+      }
+      if (m === '09' && activeYear === '2026' && sepFore) {
+        const realSum = curSalao[i] + curDelivery[i];
+        return sepFore.total > realSum ? round2(sepFore.total - realSum) : 0;
       }
       return 0;
     });
@@ -3830,7 +3848,7 @@ function renderCT() {
 
     allMon.forEach(m => {
       const d = rm[m] || {};
-      const _julForeC = (year === '2026' && m === '07') ? getJulyForecast2026() : null;
+      const _julForeC = (year === '2026' && m === '07') ? getJulyForecast2026() : (year === '2026' && m === '09') ? getSeptemberForecast2026() : null;
       const tot = _julForeC ? _julForeC.total : (d.salao_val||0) + (d.ifood_val||0) + (d.food99_val||0);
       const regCups = (year === '2026' && m === '07') ? 1400 : (d.coupons || 0);
       const evCups  = ctShowEvent ? (d.evento_cups || 0) : 0;
@@ -5075,12 +5093,14 @@ function renderChannels() {
 
     const _juneFore = (activeYear === '2026') ? getJuneForecast2026() : null;
   const _julFore  = (activeYear === '2026') ? getJulyForecast2026()  : null;
+  const _sepFore  = (activeYear === '2026') ? getSeptemberForecast2026() : null;
     chartMnums.forEach(m => {
       const d = RM[m] || {};
-      // June/July 2026: use forecast projection values
+      // June/July/September 2026: use forecast projection values
       const _isForeJun = activeYear === '2026' && m === '06' && _juneFore;
       const _isForeJul = activeYear === '2026' && m === '07' && _julFore;
-      const _fore = _isForeJun ? _juneFore : _isForeJul ? _julFore : null;
+      const _isForeSep = activeYear === '2026' && m === '09' && _sepFore;
+      const _fore = _isForeJun ? _juneFore : _isForeJul ? _julFore : _isForeSep ? _sepFore : null;
       const _isForeMonth = !!_fore;
       const sv = _fore ? (_fore.salao||0) : (d.salao_val||0);
       const iv = _fore ? (_fore.ifood||0) : (d.ifood_val||0);
@@ -5105,17 +5125,20 @@ function renderChannels() {
       totalSalaoCups+=(d.salao_cups||0); totalIfoodCups+=(d.ifood_cups||0); totalKeetaCups+=(d.keeta_cups||0);
     });
 
-    // Forecast remainder for incomplete months (July 2026)
+    // Forecast remainder for incomplete months (July/September 2026)
     chartMnums.forEach((m, i) => {
       if (m === '07' && activeYear === '2026' && _julFore) {
         const realSum = (salaoData[i]||0) + (ifoodData[i]||0) + (food99Data[i]||0) + (keetaData[i]||0);
         foreData.push(_julFore.total > realSum ? round2(_julFore.total - realSum) : 0);
+      } else if (m === '09' && activeYear === '2026' && _sepFore) {
+        const realSum = (salaoData[i]||0) + (ifoodData[i]||0) + (food99Data[i]||0) + (keetaData[i]||0);
+        foreData.push(_sepFore.total > realSum ? round2(_sepFore.total - realSum) : 0);
       } else { foreData.push(0); }
     });
 
     chartMnums.forEach(m => {
       const d = RM[m]||{};
-      const _tFore = (activeYear==='2026'&&m==='06'&&_juneFore) ? _juneFore : (activeYear==='2026'&&m==='07'&&_julFore) ? _julFore : null;
+      const _tFore = (activeYear==='2026'&&m==='06'&&_juneFore) ? _juneFore : (activeYear==='2026'&&m==='07'&&_julFore) ? _julFore : (activeYear==='2026'&&m==='09'&&_sepFore) ? _sepFore : null;
       const sv=_tFore?(_tFore.salao||0):(d.salao_val||0);
       const iv=_tFore?(_tFore.ifood||0):(d.ifood_val||0);
       const f9=_tFore?(_tFore.food99||0):(d.food99_val||0);
@@ -7569,7 +7592,7 @@ function renderCT() {
 
     allMon.forEach(m => {
       const d = rm[m] || {};
-      const _julForeC = (year === '2026' && m === '07') ? getJulyForecast2026() : null;
+      const _julForeC = (year === '2026' && m === '07') ? getJulyForecast2026() : (year === '2026' && m === '09') ? getSeptemberForecast2026() : null;
       const tot = _julForeC ? _julForeC.total : (d.salao_val||0) + (d.ifood_val||0) + (d.food99_val||0);
       const regCups = (year === '2026' && m === '07') ? 1400 : (d.coupons || 0);
       const evCups  = ctShowEvent ? (d.evento_cups || 0) : 0;
@@ -8747,12 +8770,14 @@ function renderChannels() {
 
     const _juneFore = (activeYear === '2026') ? getJuneForecast2026() : null;
   const _julFore  = (activeYear === '2026') ? getJulyForecast2026()  : null;
+  const _sepFore  = (activeYear === '2026') ? getSeptemberForecast2026() : null;
     chartMnums.forEach(m => {
       const d = RM[m] || {};
-      // June/July 2026: use forecast projection values
+      // June/July/September 2026: use forecast projection values
       const _isForeJun = activeYear === '2026' && m === '06' && _juneFore;
       const _isForeJul = activeYear === '2026' && m === '07' && _julFore;
-      const _fore = _isForeJun ? _juneFore : _isForeJul ? _julFore : null;
+      const _isForeSep = activeYear === '2026' && m === '09' && _sepFore;
+      const _fore = _isForeJun ? _juneFore : _isForeJul ? _julFore : _isForeSep ? _sepFore : null;
       const _isForeMonth = !!_fore;
       const sv = _fore ? (_fore.salao||0) : (d.salao_val||0);
       const iv = _fore ? (_fore.ifood||0) : (d.ifood_val||0);
@@ -8777,17 +8802,20 @@ function renderChannels() {
       totalSalaoCups+=(d.salao_cups||0); totalIfoodCups+=(d.ifood_cups||0); totalKeetaCups+=(d.keeta_cups||0);
     });
 
-    // Forecast remainder for incomplete months (July 2026)
+    // Forecast remainder for incomplete months (July/September 2026)
     chartMnums.forEach((m, i) => {
       if (m === '07' && activeYear === '2026' && _julFore) {
         const realSum = (salaoData[i]||0) + (ifoodData[i]||0) + (food99Data[i]||0) + (keetaData[i]||0);
         foreData.push(_julFore.total > realSum ? round2(_julFore.total - realSum) : 0);
+      } else if (m === '09' && activeYear === '2026' && _sepFore) {
+        const realSum = (salaoData[i]||0) + (ifoodData[i]||0) + (food99Data[i]||0) + (keetaData[i]||0);
+        foreData.push(_sepFore.total > realSum ? round2(_sepFore.total - realSum) : 0);
       } else { foreData.push(0); }
     });
 
     chartMnums.forEach(m => {
       const d = RM[m]||{};
-      const _tFore = (activeYear==='2026'&&m==='06'&&_juneFore) ? _juneFore : (activeYear==='2026'&&m==='07'&&_julFore) ? _julFore : null;
+      const _tFore = (activeYear==='2026'&&m==='06'&&_juneFore) ? _juneFore : (activeYear==='2026'&&m==='07'&&_julFore) ? _julFore : (activeYear==='2026'&&m==='09'&&_sepFore) ? _sepFore : null;
       const sv=_tFore?(_tFore.salao||0):(d.salao_val||0);
       const iv=_tFore?(_tFore.ifood||0):(d.ifood_val||0);
       const f9=_tFore?(_tFore.food99||0):(d.food99_val||0);
