@@ -3310,7 +3310,7 @@ function renderOverview() {
 
   // KPI cards
   const isFiltered = monthFilter !== 'all';
-  const monthLabel = isFiltered ? (MN_FULL[monthFilter] || monthFilter) : (activeYear === '2026' ? 'Jan–Jun 2026' : activeYear === '2023' ? `Ago–Dez ${activeYear}` : `Jan–Dez ${activeYear}`);
+  const monthLabel = isFiltered ? (MN_FULL[monthFilter] || monthFilter) : (activeYear === '2026' ? 'Jan–Set 2026' : activeYear === '2023' ? `Ago–Dez ${activeYear}` : `Jan–Dez ${activeYear}`);
 
   // Same-store delta card — YoY (mesmo mês / mesmo período do ano anterior)
   let sameStoreHTML = '';
