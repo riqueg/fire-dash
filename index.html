@@ -6887,8 +6887,10 @@ function renderFollowup() {
   const _julEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _julForeEvFixed = getActiveForecastMonth(activeYear, '07').metaTotal
     + (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
-  const MN_SSS = ['01','02','03','04','05','06','07','08'];
-  const sss26  = MN_SSS.map(m => m==='06' ? _juneForeWithEvFixed : m==='07' ? _julForeEvFixed : rm26[m]?.total||0);
+  const _sepEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='09'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
+  const _sepForeEvFixed = (activeYear==='2026' ? (getSeptemberForecast2026()?.total||0) : (getActiveForecastMonth(activeYear,'09').metaTotal||0)) + _sepEvFixed;
+  const MN_SSS = ['01','02','03','04','05','06','07','08','09'];
+  const sss26  = MN_SSS.map(m => m==='06' ? _juneForeWithEvFixed : m==='07' ? _julForeEvFixed : m==='09' ? _sepForeEvFixed : rm26[m]?.total||0);
   const sss25  = MN_SSS.map(m => rm25[m]?.total||0);
   const sssPct = MN_SSS.map((m,i) => sss25[i]>0 ? +((sss26[i]-sss25[i])/sss25[i]*100).toFixed(1) : 0);
 
@@ -6915,6 +6917,15 @@ function renderFollowup() {
       const sMix7 = opTot07 > 0 ? (d07.salao_val||0)/opTot07 : 0.50;
       const dMix7 = opTot07 > 0 ? ((d07.ifood_val||0)+(d07.food99_val||0)+(d07.keeta_val||0))/opTot07 : 0.50;
       return { salao: Math.round(base7*sMix7), delivery: Math.round(base7*dMix7), evento: ev7 };
+    }
+    if (m === '09') {
+      const ev9 = _sepEvFixed;
+      const base9 = _sepForeEvFixed - ev9;
+      const d09 = rm26['09'] || {};
+      const opTot09 = d09.total || 0;
+      const sMix9 = opTot09 > 0 ? (d09.salao_val||0)/opTot09 : 0.43;
+      const dMix9 = opTot09 > 0 ? ((d09.ifood_val||0)+(d09.food99_val||0)+(d09.keeta_val||0))/opTot09 : 0.57;
+      return { salao: Math.round(base9*sMix9), delivery: Math.round(base9*dMix9), evento: ev9 };
     }
     return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0)+(d.keeta_val||0), evento: 0 };
   };
@@ -6965,7 +6976,7 @@ function renderFollowup() {
       },
       // ── 2026 direita ──────────────────────────────────────────────
       { label: '🏠 Salão 2026', data: s26d,
-        backgroundColor: MN_SSS.map(m => m==='08' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
+        backgroundColor: MN_SSS.map(m => m==='09' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
         borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
         datalabels: { display: ctx => s26d[ctx.dataIndex] > 0 && sss26[ctx.dataIndex] > 0,
@@ -6974,7 +6985,7 @@ function renderFollowup() {
           anchor: 'center', align: 'center' }
       },
       { label: '🛵 Delivery 2026', data: d26d,
-        backgroundColor: MN_SSS.map(m => m==='08' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
+        backgroundColor: MN_SSS.map(m => m==='09' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
         borderRadius: MN_SSS.map((_,i) => e26d[i] > 0 ? 0 : 3),
         barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
@@ -10564,8 +10575,10 @@ function renderFollowup() {
   const _julEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _julForeEvFixed = getActiveForecastMonth(activeYear, '07').metaTotal
     + (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
-  const MN_SSS = ['01','02','03','04','05','06','07','08'];
-  const sss26  = MN_SSS.map(m => m==='06' ? _juneForeWithEvFixed : m==='07' ? _julForeEvFixed : rm26[m]?.total||0);
+  const _sepEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='09'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
+  const _sepForeEvFixed = (activeYear==='2026' ? (getSeptemberForecast2026()?.total||0) : (getActiveForecastMonth(activeYear,'09').metaTotal||0)) + _sepEvFixed;
+  const MN_SSS = ['01','02','03','04','05','06','07','08','09'];
+  const sss26  = MN_SSS.map(m => m==='06' ? _juneForeWithEvFixed : m==='07' ? _julForeEvFixed : m==='09' ? _sepForeEvFixed : rm26[m]?.total||0);
   const sss25  = MN_SSS.map(m => rm25[m]?.total||0);
   const sssPct = MN_SSS.map((m,i) => sss25[i]>0 ? +((sss26[i]-sss25[i])/sss25[i]*100).toFixed(1) : 0);
 
@@ -10592,6 +10605,15 @@ function renderFollowup() {
       const sMix7 = opTot07 > 0 ? (d07.salao_val||0)/opTot07 : 0.50;
       const dMix7 = opTot07 > 0 ? ((d07.ifood_val||0)+(d07.food99_val||0)+(d07.keeta_val||0))/opTot07 : 0.50;
       return { salao: Math.round(base7*sMix7), delivery: Math.round(base7*dMix7), evento: ev7 };
+    }
+    if (m === '09') {
+      const ev9 = _sepEvFixed;
+      const base9 = _sepForeEvFixed - ev9;
+      const d09 = rm26['09'] || {};
+      const opTot09 = d09.total || 0;
+      const sMix9 = opTot09 > 0 ? (d09.salao_val||0)/opTot09 : 0.43;
+      const dMix9 = opTot09 > 0 ? ((d09.ifood_val||0)+(d09.food99_val||0)+(d09.keeta_val||0))/opTot09 : 0.57;
+      return { salao: Math.round(base9*sMix9), delivery: Math.round(base9*dMix9), evento: ev9 };
     }
     return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0)+(d.keeta_val||0), evento: 0 };
   };
@@ -10642,7 +10664,7 @@ function renderFollowup() {
       },
       // ── 2026 direita ──────────────────────────────────────────────
       { label: '🏠 Salão 2026', data: s26d,
-        backgroundColor: MN_SSS.map(m => m==='08' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
+        backgroundColor: MN_SSS.map(m => m==='09' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
         borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
         datalabels: { display: ctx => s26d[ctx.dataIndex] > 0 && sss26[ctx.dataIndex] > 0,
@@ -10651,7 +10673,7 @@ function renderFollowup() {
           anchor: 'center', align: 'center' }
       },
       { label: '🛵 Delivery 2026', data: d26d,
-        backgroundColor: MN_SSS.map(m => m==='08' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
+        backgroundColor: MN_SSS.map(m => m==='09' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
         borderRadius: MN_SSS.map((_,i) => e26d[i] > 0 ? 0 : 3),
         barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
