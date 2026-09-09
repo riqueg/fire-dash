@@ -3686,7 +3686,7 @@ function checkChannelCompleteness(yr) {
   for (const canal in CANAIS) {
     const comValor = allDates.filter(d => {
       const e = daily[d]; if (!e) return false;
-      return (e[canal] || 0) > 0 || (e.channels_verified || []).includes(canal);
+      return (e[canal] || 0) > 0 || (canal in e) || (e.channels_verified || []).includes(canal);
     }).sort((a, b) => parseDate(b) - parseDate(a));
     const lastCanal = comValor[0] || null;
     if (!lastCanal || parseDate(lastCanal) < parseDate(lastOverall)) {
@@ -7441,7 +7441,7 @@ function checkChannelCompleteness(yr) {
   for (const canal in CANAIS) {
     const comValor = allDates.filter(d => {
       const e = daily[d]; if (!e) return false;
-      return (e[canal] || 0) > 0 || (e.channels_verified || []).includes(canal);
+      return (e[canal] || 0) > 0 || (canal in e) || (e.channels_verified || []).includes(canal);
     }).sort((a, b) => parseDate(b) - parseDate(a));
     const lastCanal = comValor[0] || null;
     if (!lastCanal || parseDate(lastCanal) < parseDate(lastOverall)) {
