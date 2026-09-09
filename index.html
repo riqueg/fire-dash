@@ -6394,7 +6394,8 @@ function renderFollowup() {
     const fdBarData = FD.map(d => {
       if (!d.is_real) return null;
       if (d.real == null) return null;
-      return round2((d.salao || 0) + (d.ifood || 0) + (d.food99 || 0) + (d.keeta || 0));
+      const _chs = (d.salao||0)+(d.ifood||0)+(d.food99||0)+(d.keeta||0);
+    return round2(_chs > 0 ? _chs : (d.real || 0));
     });
     const fdMetaData  = FD.map(d => d.meta);
     const fdEventoData = FD.map(d => {
@@ -7256,7 +7257,8 @@ function renderForecast() {
     if (_ch === 'ifood')  return round2(d.ifood  || 0);
     if (_ch === 'food99') return round2(d.food99 || 0);
     if (_ch === 'keeta')  return round2(d.keeta  || 0);
-    return round2((d.salao || 0) + (d.ifood || 0) + (d.food99 || 0) + (d.keeta || 0));
+    const _chs = (d.salao||0)+(d.ifood||0)+(d.food99||0)+(d.keeta||0);
+    return round2(_chs > 0 ? _chs : (d.real || 0));
   });
 
   // Per-channel meta line: prorated by that channel's share of the day's total
@@ -10094,7 +10096,8 @@ function renderFollowup() {
     const fdBarData = FD.map(d => {
       if (!d.is_real) return null;
       if (d.real == null) return null;
-      return round2((d.salao || 0) + (d.ifood || 0) + (d.food99 || 0) + (d.keeta || 0));
+      const _chs = (d.salao||0)+(d.ifood||0)+(d.food99||0)+(d.keeta||0);
+    return round2(_chs > 0 ? _chs : (d.real || 0));
     });
     const fdMetaData  = FD.map(d => d.meta);
     const fdEventoData = FD.map(d => {
@@ -10955,7 +10958,8 @@ function renderForecast() {
     if (_ch === 'ifood')  return round2(d.ifood  || 0);
     if (_ch === 'food99') return round2(d.food99 || 0);
     if (_ch === 'keeta')  return round2(d.keeta  || 0);
-    return round2((d.salao || 0) + (d.ifood || 0) + (d.food99 || 0) + (d.keeta || 0));
+    const _chs = (d.salao||0)+(d.ifood||0)+(d.food99||0)+(d.keeta||0);
+    return round2(_chs > 0 ? _chs : (d.real || 0));
   });
 
   // Per-channel meta line: prorated by that channel's share of the day's total
