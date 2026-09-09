@@ -4814,11 +4814,23 @@ function renderMixAuv() {
         if (correct == null) return;
         totCur[m]['Entradas'] = correct;
       });
-      const SOBREMESAS_QTY_2026 = {'07':155};
+      const SOBREMESAS_QTY_2026 = {'07':155,'08':153};
       ALL_MN.forEach(m => {
         const correct = SOBREMESAS_QTY_2026[m];
         if (correct == null) return;
         totCur[m]['Sobremesas'] = correct;
+      });
+      const BEBIDAS_QTY_2026 = {'08':1206};
+      ALL_MN.forEach(m => {
+        const correct = BEBIDAS_QTY_2026[m];
+        if (correct == null) return;
+        totCur[m]['Bebidas'] = correct;
+      });
+      const CERVEJAS_QTY_2026 = {'08':200};
+      ALL_MN.forEach(m => {
+        const correct = CERVEJAS_QTY_2026[m];
+        if (correct == null) return;
+        totCur[m]['Cervejas'] = correct;
       });
     }
   } else if (catFilter === 'Burger') {
@@ -8502,11 +8514,23 @@ function renderMixAuv() {
         if (correct == null) return;
         totCur[m]['Entradas'] = correct;
       });
-      const SOBREMESAS_QTY_2026 = {'07':155};
+      const SOBREMESAS_QTY_2026 = {'07':155,'08':153};
       ALL_MN.forEach(m => {
         const correct = SOBREMESAS_QTY_2026[m];
         if (correct == null) return;
         totCur[m]['Sobremesas'] = correct;
+      });
+      const BEBIDAS_QTY_2026 = {'08':1206};
+      ALL_MN.forEach(m => {
+        const correct = BEBIDAS_QTY_2026[m];
+        if (correct == null) return;
+        totCur[m]['Bebidas'] = correct;
+      });
+      const CERVEJAS_QTY_2026 = {'08':200};
+      ALL_MN.forEach(m => {
+        const correct = CERVEJAS_QTY_2026[m];
+        if (correct == null) return;
+        totCur[m]['Cervejas'] = correct;
       });
     }
   } else if (catFilter === 'Burger') {
