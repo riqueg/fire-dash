@@ -5158,7 +5158,7 @@ function renderMixAuv() {
   // Promo plataformas: collapse to single bar (combo/2x1) or split by tamanho (familia)
   if (['combo','2x1','familia'].includes(plataforma) && catFilter === 'all') {
     if (plataforma === 'familia') {
-      const FAMILIA_2026 = { '07': { total: 66, '100g': 53, '140g': 13 }, '08': { total: 79, '100g': 49, '140g': 30 } };
+      const FAMILIA_2026 = { '07': { total: 66, '100g': 53, '140g': 13 }, '08': { total: 79, '100g': 49, '140g': 30 }, '09': { total: 42, '100g': 21, '140g': 21 } };
       if (tamanho === 'all') {
         subcats   = ['Família'];
         subColors = { 'Família': '#c87eff' };
@@ -5210,6 +5210,11 @@ function renderMixAuv() {
             all:   { all: 663, salao: 456, delivery: 207 },
             '100g': { all: 223, salao: 153, delivery: 70  },
             '140g': { all: 440, salao: 303, delivery: 137 }
+          },
+          '09': {
+            all:   { all: 1312, salao: 907, delivery: 405 },
+            '100g': { all: 410, salao: 308, delivery: 102 },
+            '140g': { all: 902, salao: 599, delivery: 303 }
           }
         };
         ALL_MN.forEach(m => {
@@ -5234,6 +5239,11 @@ function renderMixAuv() {
             all:   { all: 138, salao: 0, delivery: 138 },
             '100g': { all: 37, salao: 0, delivery: 37 },
             '140g': { all: 101, salao: 0, delivery: 101 }
+          },
+          '09': {
+            all:   { all: 50, salao: 0, delivery: 50 },
+            '100g': { all: 10, salao: 0, delivery: 10 },
+            '140g': { all: 40, salao: 0, delivery: 40 }
           }
         };
         ALL_MN.forEach(m => {
@@ -8896,7 +8906,7 @@ function renderMixAuv() {
   // Promo plataformas: collapse to single bar (combo/2x1) or split by tamanho (familia)
   if (['combo','2x1','familia'].includes(plataforma) && catFilter === 'all') {
     if (plataforma === 'familia') {
-      const FAMILIA_2026 = { '07': { total: 66, '100g': 53, '140g': 13 }, '08': { total: 79, '100g': 49, '140g': 30 } };
+      const FAMILIA_2026 = { '07': { total: 66, '100g': 53, '140g': 13 }, '08': { total: 79, '100g': 49, '140g': 30 }, '09': { total: 42, '100g': 21, '140g': 21 } };
       if (tamanho === 'all') {
         subcats   = ['Família'];
         subColors = { 'Família': '#c87eff' };
@@ -8948,6 +8958,11 @@ function renderMixAuv() {
             all:   { all: 663, salao: 456, delivery: 207 },
             '100g': { all: 223, salao: 153, delivery: 70  },
             '140g': { all: 440, salao: 303, delivery: 137 }
+          },
+          '09': {
+            all:   { all: 1312, salao: 907, delivery: 405 },
+            '100g': { all: 410, salao: 308, delivery: 102 },
+            '140g': { all: 902, salao: 599, delivery: 303 }
           }
         };
         ALL_MN.forEach(m => {
@@ -8972,6 +8987,11 @@ function renderMixAuv() {
             all:   { all: 138, salao: 0, delivery: 138 },
             '100g': { all: 37, salao: 0, delivery: 37 },
             '140g': { all: 101, salao: 0, delivery: 101 }
+          },
+          '09': {
+            all:   { all: 50, salao: 0, delivery: 50 },
+            '100g': { all: 10, salao: 0, delivery: 10 },
+            '140g': { all: 40, salao: 0, delivery: 40 }
           }
         };
         ALL_MN.forEach(m => {
