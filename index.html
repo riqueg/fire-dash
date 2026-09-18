@@ -5053,6 +5053,18 @@ function renderMixAuv() {
         totCur[m]['Cervejas'] = correct;
       });
     }
+    // A la Carte = total burgers − combo (1 burger cada) − 2x1 (2 cada) − família (4 cada)
+    if (activeYear === '2026' && plataforma === 'a_lacarte' && canal === 'all') {
+      const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+      const _CC = {'07':{all:{all:309}},'08':{all:{all:663}},'09':{all:{all:1395}}};
+      const _X2 = {'08':{all:{all:138}},'09':{all:{all:45}}};
+      const _FM = {'07':{total:66},'08':{total:79},'09':{total:43}};
+      ALL_MN.forEach(m => {
+        const bq = _BQ[m]; if (bq == null) return;
+        const alacarte = Math.max(0, bq - (_CC[m]?.all?.all??0) - (_X2[m]?.all?.all??0)*2 - (_FM[m]?.total??0)*4);
+        totCur[m]['Burger'] = alacarte;
+      });
+    }
   } else if (catFilter === 'Burger') {
     const burgerSub = document.getElementById('mix-auv-burgersub')?.value || 'all';
     if (burgerSub === 'Hot Dog') {
@@ -8809,6 +8821,18 @@ function renderMixAuv() {
         const correct = CERVEJAS_QTY_2026[m];
         if (correct == null) return;
         totCur[m]['Cervejas'] = correct;
+      });
+    }
+    // A la Carte = total burgers − combo (1 burger cada) − 2x1 (2 cada) − família (4 cada)
+    if (activeYear === '2026' && plataforma === 'a_lacarte' && canal === 'all') {
+      const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+      const _CC = {'07':{all:{all:309}},'08':{all:{all:663}},'09':{all:{all:1395}}};
+      const _X2 = {'08':{all:{all:138}},'09':{all:{all:45}}};
+      const _FM = {'07':{total:66},'08':{total:79},'09':{total:43}};
+      ALL_MN.forEach(m => {
+        const bq = _BQ[m]; if (bq == null) return;
+        const alacarte = Math.max(0, bq - (_CC[m]?.all?.all??0) - (_X2[m]?.all?.all??0)*2 - (_FM[m]?.total??0)*4);
+        totCur[m]['Burger'] = alacarte;
       });
     }
   } else if (catFilter === 'Burger') {
