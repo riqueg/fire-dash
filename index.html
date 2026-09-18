@@ -4742,7 +4742,17 @@ function renderMixAuv() {
   const opCur  = ALL_MN.map(m => rmCur[m]?.op_days || 0);
   const op25   = ALL_MN.map(m => rm25[m]?.op_days  || 0);
   const dimCur = ALL_MN.map((m, i) => {
-    return new Date(parseInt(activeYear), parseInt(m), 0).getDate();
+    const fullDays = new Date(parseInt(activeYear), parseInt(m), 0).getDate();
+    // Mês vigente: divide pelo último dia com dado real (ex: 17 em vez de 30)
+    const now = new Date();
+    const curMon = String(now.getMonth() + 1).padStart(2, '0');
+    if (activeYear === String(now.getFullYear()) && m === curMon) {
+      const dc = getDailyData();
+      const suffix = '/' + m + '/' + activeYear;
+      const days = Object.keys(dc).filter(d => d.endsWith(suffix)).map(d => parseInt(d.split('/')[0]));
+      if (days.length > 0) return Math.max(...days);
+    }
+    return fullDays;
   });
   const dim25  = ALL_MN.map(m => new Date(2025, parseInt(m), 0).getDate());
 
@@ -5158,7 +5168,7 @@ function renderMixAuv() {
   // Promo plataformas: collapse to single bar (combo/2x1) or split by tamanho (familia)
   if (['combo','2x1','familia'].includes(plataforma) && catFilter === 'all') {
     if (plataforma === 'familia') {
-      const FAMILIA_2026 = { '07': { total: 66, '100g': 53, '140g': 13 }, '08': { total: 79, '100g': 49, '140g': 30 }, '09': { total: 42, '100g': 21, '140g': 21 } };
+      const FAMILIA_2026 = { '07': { total: 66, '100g': 53, '140g': 13 }, '08': { total: 79, '100g': 49, '140g': 30 }, '09': { total: 43, '100g': 24, '140g': 19 } };
       if (tamanho === 'all') {
         subcats   = ['Família'];
         subColors = { 'Família': '#c87eff' };
@@ -5212,9 +5222,9 @@ function renderMixAuv() {
             '140g': { all: 440, salao: 303, delivery: 137 }
           },
           '09': {
-            all:   { all: 432, salao: 297, delivery: 135 },
-            '100g': { all: 135, salao: 101, delivery: 34 },
-            '140g': { all: 297, salao: 196, delivery: 101 }
+            all:   { all: 1395, salao: 993, delivery: 402 },
+            '100g': { all: 459, salao: 345, delivery: 114 },
+            '140g': { all: 936, salao: 648, delivery: 288 }
           }
         };
         ALL_MN.forEach(m => {
@@ -5241,9 +5251,9 @@ function renderMixAuv() {
             '140g': { all: 101, salao: 0, delivery: 101 }
           },
           '09': {
-            all:   { all: 50, salao: 0, delivery: 50 },
-            '100g': { all: 10, salao: 0, delivery: 10 },
-            '140g': { all: 40, salao: 0, delivery: 40 }
+            all:   { all: 45, salao: 0, delivery: 45 },
+            '100g': { all: 8, salao: 0, delivery: 8 },
+            '140g': { all: 37, salao: 0, delivery: 37 }
           }
         };
         ALL_MN.forEach(m => {
@@ -8490,7 +8500,17 @@ function renderMixAuv() {
   const opCur  = ALL_MN.map(m => rmCur[m]?.op_days || 0);
   const op25   = ALL_MN.map(m => rm25[m]?.op_days  || 0);
   const dimCur = ALL_MN.map((m, i) => {
-    return new Date(parseInt(activeYear), parseInt(m), 0).getDate();
+    const fullDays = new Date(parseInt(activeYear), parseInt(m), 0).getDate();
+    // Mês vigente: divide pelo último dia com dado real (ex: 17 em vez de 30)
+    const now = new Date();
+    const curMon = String(now.getMonth() + 1).padStart(2, '0');
+    if (activeYear === String(now.getFullYear()) && m === curMon) {
+      const dc = getDailyData();
+      const suffix = '/' + m + '/' + activeYear;
+      const days = Object.keys(dc).filter(d => d.endsWith(suffix)).map(d => parseInt(d.split('/')[0]));
+      if (days.length > 0) return Math.max(...days);
+    }
+    return fullDays;
   });
   const dim25  = ALL_MN.map(m => new Date(2025, parseInt(m), 0).getDate());
 
@@ -8906,7 +8926,7 @@ function renderMixAuv() {
   // Promo plataformas: collapse to single bar (combo/2x1) or split by tamanho (familia)
   if (['combo','2x1','familia'].includes(plataforma) && catFilter === 'all') {
     if (plataforma === 'familia') {
-      const FAMILIA_2026 = { '07': { total: 66, '100g': 53, '140g': 13 }, '08': { total: 79, '100g': 49, '140g': 30 }, '09': { total: 42, '100g': 21, '140g': 21 } };
+      const FAMILIA_2026 = { '07': { total: 66, '100g': 53, '140g': 13 }, '08': { total: 79, '100g': 49, '140g': 30 }, '09': { total: 43, '100g': 24, '140g': 19 } };
       if (tamanho === 'all') {
         subcats   = ['Família'];
         subColors = { 'Família': '#c87eff' };
@@ -8960,9 +8980,9 @@ function renderMixAuv() {
             '140g': { all: 440, salao: 303, delivery: 137 }
           },
           '09': {
-            all:   { all: 432, salao: 297, delivery: 135 },
-            '100g': { all: 135, salao: 101, delivery: 34 },
-            '140g': { all: 297, salao: 196, delivery: 101 }
+            all:   { all: 1395, salao: 993, delivery: 402 },
+            '100g': { all: 459, salao: 345, delivery: 114 },
+            '140g': { all: 936, salao: 648, delivery: 288 }
           }
         };
         ALL_MN.forEach(m => {
@@ -8989,9 +9009,9 @@ function renderMixAuv() {
             '140g': { all: 101, salao: 0, delivery: 101 }
           },
           '09': {
-            all:   { all: 50, salao: 0, delivery: 50 },
-            '100g': { all: 10, salao: 0, delivery: 10 },
-            '140g': { all: 40, salao: 0, delivery: 40 }
+            all:   { all: 45, salao: 0, delivery: 45 },
+            '100g': { all: 8, salao: 0, delivery: 8 },
+            '140g': { all: 37, salao: 0, delivery: 37 }
           }
         };
         ALL_MN.forEach(m => {
