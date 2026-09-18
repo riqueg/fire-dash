@@ -5022,7 +5022,7 @@ function renderMixAuv() {
     tot25     = buildAllCatTotals(prods25, getChanRatio);
     // Correção Burger: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
     if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
-      const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+      const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
       ALL_MN.forEach(m => {
         const correct = BURGER_QTY_2026[m];
         if (correct == null) return;
@@ -5055,7 +5055,7 @@ function renderMixAuv() {
     }
     // A la Carte = total burgers − combo (1 burger cada) − 2x1 (2 cada) − família (4 cada)
     if (activeYear === '2026' && plataforma === 'a_lacarte' && canal === 'all') {
-      const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+      const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
       const _CC = {'07':{all:{all:309}},'08':{all:{all:663}},'09':{all:{all:1395}}};
       const _X2 = {'08':{all:{all:138}},'09':{all:{all:45}}};
       const _FM = {'07':{total:66},'08':{total:79},'09':{total:43}};
@@ -5083,7 +5083,7 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25, 'Burger', hotDogBaseName, subcats, getChanRatio);
       if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
         const _allRaw = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g','Hot Dog'], getChanRatio);
-        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
         ALL_MN.forEach(m => {
           const _c = _BQ[m]; if (!_c) return;
           const _rt = ['100g & Chicken','140g','Hot Dog'].reduce((s,c) => s + (_allRaw[m][c]||0), 0);
@@ -5123,7 +5123,7 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25, 'Burger', burgerBaseName, subcats, getChanRatio);
       if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
         const _allRaw = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g','Hot Dog'], getChanRatio);
-        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
         ALL_MN.forEach(m => {
           const _c = _BQ[m]; if (!_c) return;
           const _rt = ['100g & Chicken','140g','Hot Dog'].reduce((s,c) => s + (_allRaw[m][c]||0), 0);
@@ -5139,7 +5139,7 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25,'Burger',burgerSubcat,subcats, getChanRatio);
       // Correção: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
       if (plataforma === 'all' && canal === 'all') {
-        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
         ALL_MN.forEach(m => {
           const correct = BURGER_QTY_2026[m];
           if (!correct) return;
@@ -8792,7 +8792,7 @@ function renderMixAuv() {
     tot25     = buildAllCatTotals(prods25, getChanRatio);
     // Correção Burger: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
     if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
-      const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+      const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
       ALL_MN.forEach(m => {
         const correct = BURGER_QTY_2026[m];
         if (correct == null) return;
@@ -8825,7 +8825,7 @@ function renderMixAuv() {
     }
     // A la Carte = total burgers − combo (1 burger cada) − 2x1 (2 cada) − família (4 cada)
     if (activeYear === '2026' && plataforma === 'a_lacarte' && canal === 'all') {
-      const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+      const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
       const _CC = {'07':{all:{all:309}},'08':{all:{all:663}},'09':{all:{all:1395}}};
       const _X2 = {'08':{all:{all:138}},'09':{all:{all:45}}};
       const _FM = {'07':{total:66},'08':{total:79},'09':{total:43}};
@@ -8853,7 +8853,7 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25, 'Burger', hotDogBaseName, subcats, getChanRatio);
       if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
         const _allRaw = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g','Hot Dog'], getChanRatio);
-        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
         ALL_MN.forEach(m => {
           const _c = _BQ[m]; if (!_c) return;
           const _rt = ['100g & Chicken','140g','Hot Dog'].reduce((s,c) => s + (_allRaw[m][c]||0), 0);
@@ -8893,7 +8893,7 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25, 'Burger', burgerBaseName, subcats, getChanRatio);
       if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
         const _allRaw = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g','Hot Dog'], getChanRatio);
-        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
         ALL_MN.forEach(m => {
           const _c = _BQ[m]; if (!_c) return;
           const _rt = ['100g & Chicken','140g','Hot Dog'].reduce((s,c) => s + (_allRaw[m][c]||0), 0);
@@ -8909,7 +8909,7 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25,'Burger',burgerSubcat,subcats, getChanRatio);
       // Correção: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
       if (plataforma === 'all' && canal === 'all') {
-        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':1380};
+        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
         ALL_MN.forEach(m => {
           const correct = BURGER_QTY_2026[m];
           if (!correct) return;
