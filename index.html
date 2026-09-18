@@ -5020,37 +5020,40 @@ function renderMixAuv() {
     subColors = Object.fromEntries(AUV_CATS.map(c => [c, CAT_COLORS[c] || '#909090']));
     totCur    = buildAllCatTotals(getProducts(), getChanRatio);
     tot25     = buildAllCatTotals(prods25, getChanRatio);
-    // Correção Burger: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
-    if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
-      const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
+    // Correção Burger/Entradas/Bebidas: quantidades reais do ConnectPlug + PivotGrid, com split por canal
+    if (activeYear === '2026' && plataforma === 'all') {
+      if (canal === 'all') {
+        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
+        ALL_MN.forEach(m => {
+          const correct = BURGER_QTY_2026[m];
+          if (correct == null) return;
+          totCur[m]['Burger'] = correct;
+        });
+      }
+      // Entradas: canal separado por mês com dados do PivotGrid; demais apenas total
+      const ENTRADAS_CANAL_2026 = {'07':{all:1333},'08':{all:1304},'09':{all:983,salao:503,delivery:480}};
       ALL_MN.forEach(m => {
-        const correct = BURGER_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Burger'] = correct;
+        const cq = ENTRADAS_CANAL_2026[m]; if (!cq) return;
+        if (canal !== 'all' && cq.salao == null) return;
+        totCur[m]['Entradas'] = canal === 'salao' ? cq.salao : canal === 'delivery' ? (cq.delivery??0) : cq.all;
       });
-      const ENTRADAS_QTY_2026 = {'07':1333,'08':1304,'09':1073};
+      const SOBREMESAS_QTY_2026 = {'07':155,'08':153,'09':70};
       ALL_MN.forEach(m => {
-        const correct = ENTRADAS_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Entradas'] = correct;
+        const correct = SOBREMESAS_QTY_2026[m]; if (correct == null) return;
+        if (canal === 'all') totCur[m]['Sobremesas'] = correct;
       });
-      const SOBREMESAS_QTY_2026 = {'07':155,'08':153,'09':104};
+      // Bebidas: canal separado por mês com dados do PivotGrid
+      const BEBIDAS_CANAL_2026 = {'08':{all:1206},'09':{all:823,salao:626,delivery:197}};
       ALL_MN.forEach(m => {
-        const correct = SOBREMESAS_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Sobremesas'] = correct;
+        const cq = BEBIDAS_CANAL_2026[m]; if (!cq) return;
+        if (canal !== 'all' && cq.salao == null) return;
+        totCur[m]['Bebidas'] = canal === 'salao' ? cq.salao : canal === 'delivery' ? (cq.delivery??0) : cq.all;
       });
-      const BEBIDAS_QTY_2026 = {'08':1206,'09':681};
+      // Cervejas: apenas salão (delivery = 0)
+      const CERVEJAS_QTY_2026 = {'08':200,'09':72};
       ALL_MN.forEach(m => {
-        const correct = BEBIDAS_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Bebidas'] = correct;
-      });
-      const CERVEJAS_QTY_2026 = {'08':200,'09':69};
-      ALL_MN.forEach(m => {
-        const correct = CERVEJAS_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Cervejas'] = correct;
+        const correct = CERVEJAS_QTY_2026[m]; if (correct == null) return;
+        totCur[m]['Cervejas'] = canal === 'delivery' ? 0 : correct;
       });
     }
     // A la Carte = total burgers − combo (1 burger cada) − 2x1 (2 cada) − família (4 cada)
@@ -5064,6 +5067,12 @@ function renderMixAuv() {
         const alacarte = Math.max(0, bq - (_CC[m]?.all?.all??0) - (_X2[m]?.all?.all??0)*2 - (_FM[m]?.total??0)*4);
         totCur[m]['Burger'] = alacarte;
       });
+      // Entradas à la carte = total − fritas nos combos (−CB)
+      const _EAL = {'09':496};
+      ALL_MN.forEach(m => { const v = _EAL[m]; if (v != null) totCur[m]['Entradas'] = v; });
+      // Bebidas à la carte = total − bebidas nos combos (−CB)
+      const _BAL = {'09':336};
+      ALL_MN.forEach(m => { const v = _BAL[m]; if (v != null) totCur[m]['Bebidas'] = v; });
     }
   } else if (catFilter === 'Burger') {
     const burgerSub = document.getElementById('mix-auv-burgersub')?.value || 'all';
@@ -8790,37 +8799,40 @@ function renderMixAuv() {
     subColors = Object.fromEntries(AUV_CATS.map(c => [c, CAT_COLORS[c] || '#909090']));
     totCur    = buildAllCatTotals(getProducts(), getChanRatio);
     tot25     = buildAllCatTotals(prods25, getChanRatio);
-    // Correção Burger: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
-    if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
-      const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
+    // Correção Burger/Entradas/Bebidas: quantidades reais do ConnectPlug + PivotGrid, com split por canal
+    if (activeYear === '2026' && plataforma === 'all') {
+      if (canal === 'all') {
+        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':2647};
+        ALL_MN.forEach(m => {
+          const correct = BURGER_QTY_2026[m];
+          if (correct == null) return;
+          totCur[m]['Burger'] = correct;
+        });
+      }
+      // Entradas: canal separado por mês com dados do PivotGrid; demais apenas total
+      const ENTRADAS_CANAL_2026 = {'07':{all:1333},'08':{all:1304},'09':{all:983,salao:503,delivery:480}};
       ALL_MN.forEach(m => {
-        const correct = BURGER_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Burger'] = correct;
+        const cq = ENTRADAS_CANAL_2026[m]; if (!cq) return;
+        if (canal !== 'all' && cq.salao == null) return;
+        totCur[m]['Entradas'] = canal === 'salao' ? cq.salao : canal === 'delivery' ? (cq.delivery??0) : cq.all;
       });
-      const ENTRADAS_QTY_2026 = {'07':1333,'08':1304,'09':1073};
+      const SOBREMESAS_QTY_2026 = {'07':155,'08':153,'09':70};
       ALL_MN.forEach(m => {
-        const correct = ENTRADAS_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Entradas'] = correct;
+        const correct = SOBREMESAS_QTY_2026[m]; if (correct == null) return;
+        if (canal === 'all') totCur[m]['Sobremesas'] = correct;
       });
-      const SOBREMESAS_QTY_2026 = {'07':155,'08':153,'09':104};
+      // Bebidas: canal separado por mês com dados do PivotGrid
+      const BEBIDAS_CANAL_2026 = {'08':{all:1206},'09':{all:823,salao:626,delivery:197}};
       ALL_MN.forEach(m => {
-        const correct = SOBREMESAS_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Sobremesas'] = correct;
+        const cq = BEBIDAS_CANAL_2026[m]; if (!cq) return;
+        if (canal !== 'all' && cq.salao == null) return;
+        totCur[m]['Bebidas'] = canal === 'salao' ? cq.salao : canal === 'delivery' ? (cq.delivery??0) : cq.all;
       });
-      const BEBIDAS_QTY_2026 = {'08':1206,'09':681};
+      // Cervejas: apenas salão (delivery = 0)
+      const CERVEJAS_QTY_2026 = {'08':200,'09':72};
       ALL_MN.forEach(m => {
-        const correct = BEBIDAS_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Bebidas'] = correct;
-      });
-      const CERVEJAS_QTY_2026 = {'08':200,'09':69};
-      ALL_MN.forEach(m => {
-        const correct = CERVEJAS_QTY_2026[m];
-        if (correct == null) return;
-        totCur[m]['Cervejas'] = correct;
+        const correct = CERVEJAS_QTY_2026[m]; if (correct == null) return;
+        totCur[m]['Cervejas'] = canal === 'delivery' ? 0 : correct;
       });
     }
     // A la Carte = total burgers − combo (1 burger cada) − 2x1 (2 cada) − família (4 cada)
@@ -8834,6 +8846,12 @@ function renderMixAuv() {
         const alacarte = Math.max(0, bq - (_CC[m]?.all?.all??0) - (_X2[m]?.all?.all??0)*2 - (_FM[m]?.total??0)*4);
         totCur[m]['Burger'] = alacarte;
       });
+      // Entradas à la carte = total − fritas nos combos (−CB)
+      const _EAL = {'09':496};
+      ALL_MN.forEach(m => { const v = _EAL[m]; if (v != null) totCur[m]['Entradas'] = v; });
+      // Bebidas à la carte = total − bebidas nos combos (−CB)
+      const _BAL = {'09':336};
+      ALL_MN.forEach(m => { const v = _BAL[m]; if (v != null) totCur[m]['Bebidas'] = v; });
     }
   } else if (catFilter === 'Burger') {
     const burgerSub = document.getElementById('mix-auv-burgersub')?.value || 'all';
