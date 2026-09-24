@@ -637,6 +637,17 @@
       </div>
     </div>
     <div class="chart-wrap" style="height:380px"><canvas id="mixAuvChart" style="box-sizing: border-box; display: block; height: 380px; width: 1286px;" width="1608" height="475"></canvas></div>
+
+
+  <!-- ===== NOVOS PRODUTOS — AUV desde lançamento ===== -->
+  <div class="card" id="novos-produtos-auv-card">
+    <div class="card-title">
+      <span>✨ Novos Produtos — AUV desde lançamento</span>
+      <span id="novos-auv-days-label" style="font-size:12px;color:var(--muted);margin-left:8px"></span>
+    </div>
+    <div class="chart-wrap" style="height:220px"><canvas id="novosAuvChart"></canvas></div>
+  </div>
+
   </div>
 
 
@@ -3137,6 +3148,19 @@ const EVENTOS_MIX = [{"data":"13/06/2026","xburger":315,"fireclassic":363,"xdogb
 const SAZONALIDADE = {"Rua":{"2024-01":0.980459,"2024-02":0.876132,"2024-03":1.08842,"2024-04":0.926136,"2024-05":1.039771,"2024-06":0.955601,"2024-07":1.053287,"2024-08":1.067638,"2024-09":0.913138,"2024-10":0.995395,"2024-11":1.046317,"2024-12":1.077968,"2025-01":1.025376,"2025-02":0.847367,"2025-03":1.05237,"2025-04":0.936299,"2025-05":1.067638,"2025-06":0.919402,"2025-07":1.069812,"2025-08":1.067285,"2025-09":0.903941,"2025-10":1.024916,"2025-11":1.026014,"2025-12":1.072974,"2026-01":1.052857,"2026-02":0.847367,"2026-03":1.01863,"2026-04":0.94606,"2026-05":1.067285,"2026-06":0.910141,"2026-07":1.10154,"2026-08":1.031935,"2026-09":0.913861,"2026-10":1.052384,"2026-11":0.987147,"2026-12":1.089808},"Shopping":{"2024-01":0.991999,"2024-02":0.85125,"2024-03":1.063514,"2024-04":0.920119,"2024-05":1.028122,"2024-06":0.988565,"2024-07":1.031812,"2024-08":0.939394,"2024-09":0.906213,"2024-10":0.991327,"2024-11":1.060724,"2024-12":1.239983,"2025-01":1.028122,"2025-02":0.8244,"2025-03":1.036666,"2025-04":0.928945,"2025-05":1.05992,"2025-06":0.948743,"2025-07":1.045094,"2025-08":0.94258,"2025-09":0.894292,"2025-10":1.014368,"2025-11":1.049924,"2025-12":1.231166,"2026-01":1.059936,"2026-02":0.824412,"2026-03":0.999118,"2026-04":0.937799,"2026-05":1.06353,"2026-06":0.936275,"2026-07":1.0694,"2026-08":0.918798,"2026-09":0.902882,"2026-10":1.045756,"2026-11":1.007645,"2026-12":1.247032},"Delivery":{"2024-01":0.977107,"2024-02":0.86625,"2024-03":1.057171,"2024-04":0.90197,"2024-05":1.062131,"2024-06":0.987631,"2024-07":1.007106,"2024-08":1.066858,"2024-09":1.001533,"2024-10":0.960985,"2024-11":1.008242,"2024-12":1.11979,"2025-01":1.017504,"2025-02":0.84164,"2025-03":1.026797,"2025-04":0.909579,"2025-05":1.085124,"2025-06":0.958364,"2025-07":1.017259,"2025-08":1.089742,"2025-09":0.968782,"2025-10":0.990727,"2025-11":1.009875,"2025-12":1.092817,"2026-01":1.039424,"2026-02":0.841554,"2026-03":0.99673,"2026-04":0.918853,"2026-05":1.108286,"2026-06":0.92693,"2026-07":1.048635,"2026-08":1.058323,"2026-09":0.976855,"2026-10":1.012071,"2026-11":0.979848,"2026-12":1.103721}};
 const SAZONALIDADE_CANAL = {"salao":"Rua","ifood":"Delivery","food99":"Delivery"};
 const CUPONS_MENSAL = {};
+
+// === NOVOS PRODUTOS (itens lançados no período) ===
+const NOVOS_PRODUTOS_2026 = [
+  { id:'trufado',      label:'🍔 Trufado',       categoria:'burger',    cor:'#e03a0e',
+    inicio:'23/09/2026',
+    qtd: { '09': { all:23, salao:21, delivery:2 } } },
+  { id:'fries_truf',   label:'🍟 Fries Trufada',  categoria:'entrada',   cor:'#f59e0b',
+    inicio:'23/09/2026',
+    qtd: { '09': { all:10, salao:7,  delivery:3 } } },
+  { id:'cookie',       label:'🍪 Cookie',          categoria:'sobremesa', cor:'#a78bfa',
+    inicio:'23/09/2026',
+    qtd: { '09': { all:17, salao:15, delivery:2 } } },
+];
 // ===DASH-DATA-END===
 
 // Arredonda para 2 casas decimais (centavos). Única função de arredondamento
@@ -3303,7 +3327,7 @@ function refreshAllViews() {
   if (!activeTab) return;
   const tabId = activeTab.id.replace('tab-','');
   if (tabId === 'overview')  { renderOverview(); renderDailyChart(); }
-  if (tabId === 'mix')       { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); }
+  if (tabId === 'mix')       { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); renderNovosAuv(); }
   if (tabId === 'channels')  { renderChannels(); renderChannelMix(); }
   if (tabId === 'followup')  renderFollowup();
   if (tabId === 'sss')       renderSSS();
@@ -7367,7 +7391,7 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 
   if (name === 'overview') { renderOverview(); renderDailyChart(); }
-  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); }
+  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); renderNovosAuv(); }
   else if (name === 'channels') { renderChannels(); renderChannelMix(); }
   else if (name === 'followup') renderFollowup();
   else if (name === 'sss') renderSSS();
@@ -11144,7 +11168,7 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 
   if (name === 'overview') { renderOverview(); renderDailyChart(); }
-  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); }
+  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); renderNovosAuv(); }
   else if (name === 'channels') { renderChannels(); renderChannelMix(); }
   else if (name === 'followup') renderFollowup();
   else if (name === 'sss') renderSSS();
@@ -11849,6 +11873,93 @@ function renderSSS() {
 
 // ── Promo Breakdown ─────────────────────────────────────────────────
 const PROMO_ITEMS = {"4 por 119":{"Burger":{"Fire Classic":1,"X-Bacon":2,"Fire Blue":3,"X-Salada":3,"X-Burger":1,"Fire Relish":1}},"4 por 99":{"Burger":{"X-Bacon":2,"Fire Blue":1,"X-Salada":2,"X-Burger":2,"Fire Classic":1}},"Combo 100g":{"Burger":{"Fire Blue":2,"X-Bacon":1,"X-Burger":2,"X-Salada":3},"Batata":{"Fritas PQ":7,"Fritas GD":1},"Bebida":{"Guaraná 350ml":1,"Guaraná zero 350ml":4,"Coca 250ml":3}},"Combo 140g":{"Batata":{"Fritas GD":6,"Fritas PQ":9},"Bebida":{"Coca 250ml":4,"Guaraná 350ml":3,"Guaraná zero 350ml":6,"Coca zero 250ml":2},"Burger":{"Fire Classic":3,"X-Bacon":2,"Fire Blue":5,"X-Salada":2,"X-Burger":1,"Fire Relish":2}},"2x1":{"Burger":{"Fire Blue":2,"Fire Classic":4,"Fire Relish":1,"X-Salada":6}}};
+
+
+function renderNovosAuv() {
+  const canvas = document.getElementById('novosAuvChart');
+  if (!canvas) return;
+
+  // Determine current active month from the mix month selector
+  const mesEl = document.getElementById('mix-auv-mes');
+  const mesNum = mesEl ? mesEl.value : Object.keys(RAW.real_monthly).sort().at(-1);
+
+  // Compute op_days since each product's launch within the selected month
+  function opDaysSinceLaunch(inicioStr, mes) {
+    const [dI, mI, yI] = inicioStr.split('/').map(Number);
+    const launchDate = new Date(yI, mI-1, dI);
+    const daily = RAW.daily_combined || {};
+    let days = 0;
+    Object.keys(daily).forEach(dateStr => {
+      const [d, m, y] = dateStr.split('/').map(Number);
+      const dt = new Date(y, m-1, d);
+      const mm = String(m).padStart(2,'0');
+      if (mm === mes && dt >= launchDate) days++;
+    });
+    return Math.max(days, 1);
+  }
+
+  const labels = [], values = [], colors = [], subtitles = [];
+  NOVOS_PRODUTOS_2026.forEach(p => {
+    const qtdMes = p.qtd[mesNum];
+    if (!qtdMes) return;
+    const days = opDaysSinceLaunch(p.inicio, mesNum);
+    const auv = +(qtdMes.all / days).toFixed(1);
+    labels.push(p.label);
+    values.push(auv);
+    colors.push(p.cor);
+    subtitles.push(days);
+  });
+
+  // Update days label
+  const maxDays = subtitles.length ? Math.max(...subtitles) : 1;
+  const daysEl = document.getElementById('novos-auv-days-label');
+  if (daysEl) daysEl.textContent = maxDays === 1 ? '(1 dia de operação)' : `(${maxDays} dias de operação)`;
+
+  destroyChart('novosAuvChart');
+  const ctx = canvas.getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'AUV',
+        data: values,
+        backgroundColor: colors.map(c => c + 'bb'),
+        borderColor: colors,
+        borderWidth: 2,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` AUV: ${ctx.parsed.x.toFixed(1)} unid/dia`,
+            afterLabel: (ctx) => ` Total: ${NOVOS_PRODUTOS_2026[ctx.dataIndex]?.qtd[mesNum]?.all || '?'} unid`
+          }
+        },
+        datalabels: {
+          display: false
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: 'rgba(128,128,128,0.15)' },
+          ticks: { color: 'var(--text)', font: { size: 12 } }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: 'var(--text)', font: { size: 13, weight: '600' } }
+        }
+      }
+    }
+  });
+}
 
 function renderPromoBreakdown() {
   const filter = (document.getElementById('promo-filter')||{}).value || 'all';
