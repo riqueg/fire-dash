@@ -7502,11 +7502,10 @@ function renderForecast() {
   const gapStretch    = round2(totalProj - metaStretch);  // sempre negativo (meta > proj)
   const pctStretch    = totalProj > 0 ? ((totalProj / metaStretch) * 100) : 0;
   const kpis = [
-    { label: 'Forecast do Mês', val: 'R$ ' + fmt(metaTotal), sub: _monLabel,                                                                                  color: 'var(--accent)' },
+    { label: 'Meta do Mês', val: 'R$ ' + fmt(metaTotal), sub: _monLabel,                                                                                  color: 'var(--accent)' },
     { label: 'Real Acumulado',  val: 'R$ ' + fmt(totalReal), sub: totalReal > 0 ? (pctReal).toFixed(1) + '% do forecast' : '—',                              color: '#4cc9f0' },
     { label: 'Projeção Final',  val: totalReal > 0 ? 'R$ ' + fmt(totalProj) : '—', sub: totalReal > 0 ? (pctProj).toFixed(1) + '% do forecast' : 'sem real ainda', color: '#06d6a0' },
-    { label: 'Real vs Meta (acum.)', val: (gap >= 0 ? '+' : '') + 'R$ ' + fmt(Math.abs(gap)), sub: (gap >= 0 ? '▲ ' : '▼ ') + Math.abs(gap / (lastCumMeta||1) * 100).toFixed(1) + '% ' + (gap >= 0 ? 'acima' : 'abaixo') + ' da meta até hoje',  color: gap >= 0 ? '#22c55e' : '#ef4444' },
-    { label: 'Meta',             val: 'R$ ' + fmt(metaStretch), sub: totalReal > 0 ? pctStretch.toFixed(1) + '% da meta atingida' : 'meta do mês',        color: pctStretch >= 100 ? '#22c55e' : '#f59e0b' }
+    { label: 'Real vs Meta (acum.)', val: (gap >= 0 ? '+' : '') + 'R$ ' + fmt(Math.abs(gap)), sub: (gap >= 0 ? '▲ ' : '▼ ') + Math.abs(gap / (lastCumMeta||1) * 100).toFixed(1) + '% ' + (gap >= 0 ? 'acima' : 'abaixo') + ' da meta até hoje',  color: gap >= 0 ? '#22c55e' : '#ef4444' }
   ];
   const kpiEl = document.getElementById('forecast-kpis');
   kpiEl.innerHTML = kpis.map(k => `
@@ -11279,11 +11278,10 @@ function renderForecast() {
   const gapStretch    = round2(totalProj - metaStretch);  // sempre negativo (meta > proj)
   const pctStretch    = totalProj > 0 ? ((totalProj / metaStretch) * 100) : 0;
   const kpis = [
-    { label: 'Forecast do Mês', val: 'R$ ' + fmt(metaTotal), sub: _monLabel,                                                                                  color: 'var(--accent)' },
+    { label: 'Meta do Mês', val: 'R$ ' + fmt(metaTotal), sub: _monLabel,                                                                                  color: 'var(--accent)' },
     { label: 'Real Acumulado',  val: 'R$ ' + fmt(totalReal), sub: totalReal > 0 ? (pctReal).toFixed(1) + '% do forecast' : '—',                              color: '#4cc9f0' },
     { label: 'Projeção Final',  val: totalReal > 0 ? 'R$ ' + fmt(totalProj) : '—', sub: totalReal > 0 ? (pctProj).toFixed(1) + '% do forecast' : 'sem real ainda', color: '#06d6a0' },
-    { label: 'Real vs Meta (acum.)', val: (gap >= 0 ? '+' : '') + 'R$ ' + fmt(Math.abs(gap)), sub: (gap >= 0 ? '▲ ' : '▼ ') + Math.abs(gap / (lastCumMeta||1) * 100).toFixed(1) + '% ' + (gap >= 0 ? 'acima' : 'abaixo') + ' da meta até hoje',  color: gap >= 0 ? '#22c55e' : '#ef4444' },
-    { label: 'Meta',             val: 'R$ ' + fmt(metaStretch), sub: totalReal > 0 ? pctStretch.toFixed(1) + '% da meta atingida' : 'meta do mês',        color: pctStretch >= 100 ? '#22c55e' : '#f59e0b' }
+    { label: 'Real vs Meta (acum.)', val: (gap >= 0 ? '+' : '') + 'R$ ' + fmt(Math.abs(gap)), sub: (gap >= 0 ? '▲ ' : '▼ ') + Math.abs(gap / (lastCumMeta||1) * 100).toFixed(1) + '% ' + (gap >= 0 ? 'acima' : 'abaixo') + ' da meta até hoje',  color: gap >= 0 ? '#22c55e' : '#ef4444' }
   ];
   const kpiEl = document.getElementById('forecast-kpis');
   kpiEl.innerHTML = kpis.map(k => `
