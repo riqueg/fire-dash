@@ -11913,6 +11913,8 @@ function renderNovosAuv() {
     borderWidth: 1,
     borderRadius: 3,
     stack: 'novos',
+    barPercentage: 0.4,
+    categoryPercentage: 0.6,
     data: allMeses.map(mes => {
       const qtd = p.qtd[mes];
       if (!qtd) return null;
