@@ -4673,9 +4673,11 @@ function renderBurgerQtyChart() {
       dayBQ[e.ds] = Math.round(bq * (e.fat / fullMonthFat));
     });
 
+    const DIAS_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
     if (agrup === 'dia') {
       dayEntries.forEach(e => {
-        labels.push(`${String(e.dd).padStart(2,'0')}/${String(e.mm).padStart(2,'0')}`);
+        const dow = DIAS_PT[e.dt.getDay()];
+        labels.push(`${String(e.dd).padStart(2,'0')}/${String(e.mm).padStart(2,'0')}\n${dow}`);
         data.push(dayBQ[e.ds] || 0);
       });
       title = 'Qtd Burger/Dia (estimado)';
@@ -4714,21 +4716,21 @@ function renderBurgerQtyChart() {
     }]},
     options: {
       responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 36, right: 10, bottom: 10 } },
+      layout: { padding: { top: 44, right: 10, bottom: 10 } },
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString('pt-BR')} lanches` } },
         datalabels: {
-          display: data.length <= 20,
-          formatter: v => v.toLocaleString('pt-BR'),
-          anchor: 'end', align: 'top', offset: 4,
-          color: '#1a1a2e', font: { size: data.length > 10 ? 10 : 12, weight: '800' },
+          display: true,
+          formatter: v => v > 0 ? v.toLocaleString('pt-BR') : '',
+          anchor: 'end', align: 'top', offset: 3,
+          color: '#1a1a2e', font: { size: data.length > 20 ? 9 : 11, weight: '800' },
           backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: 4,
-          padding: { top: 2, bottom: 2, left: 5, right: 5 }
+          padding: { top: 2, bottom: 2, left: 4, right: 4 }
         }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: data.length > 10 ? 10 : 13, weight: '600' }, maxRotation: data.length > 10 ? 45 : 0 } },
+        x: { grid: { display: false }, ticks: { font: { size: data.length > 10 ? 10 : 13, weight: '600' }, maxRotation: 0, maxTicksLimit: 35 } },
         y: { display: false }
       }
     },
@@ -5581,280 +5583,154 @@ function buildWeeks(yr, mo) {
 }
 
 function renderSemanasChart() {
-  const canvas = document.getElementById('semanasChart');
-  if (!canvas) return;
-  if (_semanasChart) { _semanasChart.destroy(); _semanasChart = null; }
+  try {
+    const canvas = document.getElementById('semanasChart');
+    if (!canvas) return;
+    if (_semanasChart) { _semanasChart.destroy(); _semanasChart = null; }
 
-  const mesEl = document.getElementById('semanas-mes');
-  const anoEl = document.getElementById('semanas-ano');
-  const mo = mesEl ? mesEl.value : activeMonth;
-  const yr = anoEl ? anoEl.value : activeYear;
+    const mesEl = document.getElementById('semanas-mes');
+    const anoEl = document.getElementById('semanas-ano');
+    // Sync to active month/year on first render
+    if (mesEl && !mesEl._semInit) { mesEl.value = activeMonth; mesEl._semInit = true; }
+    if (anoEl && !anoEl._semInit) { anoEl.value = activeYear;  anoEl._semInit = true; }
+    const mo = (mesEl && mesEl.value) ? mesEl.value : activeMonth;
+    const yr = (anoEl && anoEl.value) ? anoEl.value : activeYear;
 
-  // Sync select to activeMonth/Year if not manually changed
-  if (mesEl && !mesEl._touched) mesEl.value = activeMonth;
-  if (anoEl && !anoEl._touched) anoEl.value = activeYear;
-  ['semanas-mes','semanas-ano'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('change', () => { el._touched = true; }, {once:false});
-  });
+    const weeks = buildWeeks(yr, mo);
+    const tabela = document.getElementById('semanas-tabela');
 
-  const weeks = buildWeeks(yr, mo);
-  const tabela = document.getElementById('semanas-tabela');
+    if (!weeks.length) {
+      if (tabela) tabela.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Sem dados para este período.</p>';
+      return;
+    }
 
-  if (!weeks.length) {
-    if (tabela) tabela.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Sem dados para este mês.</p>';
-    return;
-  }
+    const fmt  = v => 'R$\u00a0' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+    const fmtD = v => 'R$\u00a0' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const fmtM = v => { const k=(v||0)/1000; return (k>=10?k.toFixed(0):k.toFixed(1))+' mil'; };
+    const pct  = (a,b) => (b && b!==0) ? ((a-b)/b*100) : null;
+    const mutedC  = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()  || '#9ca3af';
+    const borderC = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#e5e7eb';
 
-  const fmt  = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
-  const fmtD = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const fmtM = v => { const k = (v||0)/1000; return (k >= 10 ? k.toFixed(0) : k.toFixed(1)) + ' mil'; };
-  const pct  = (a, b) => b ? ((a-b)/b*100) : null;
-  const mutedColor  = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()  || '#888';
-  const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#ddd';
+    const labels = weeks.map(w => {
+      const f=w.days[0], l=w.days[w.days.length-1];
+      return String(f.dd).padStart(2,'0')+'-'+String(l.dd).padStart(2,'0')+'/'+String(f.mm).padStart(2,'0');
+    });
 
-  const labels = weeks.map(w => {
-    const f = w.days[0], l = w.days[w.days.length-1];
-    return `${String(f.dd).padStart(2,'0')}-${String(l.dd).padStart(2,'0')}/${String(f.mm).padStart(2,'0')}`;
-  });
-
-  _semanasChart = new Chart(canvas, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Faturamento',
-          data: weeks.map(w => w.total),
-          backgroundColor: 'rgba(224,58,14,0.85)',
-          borderRadius: 6,
-          barPercentage: 0.55,
-          categoryPercentage: 0.75,
-          yAxisID: 'yFat',
-          order: 2
-        },
-        {
-          label: 'Cupons',
-          data: weeks.map(w => w.cups),
-          type: 'line',
-          borderColor: '#1a1a2e',
-          backgroundColor: '#1a1a2e',
-          pointBackgroundColor: '#1a1a2e',
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          borderWidth: 2.5,
-          tension: 0.3,
-          yAxisID: 'yCups',
-          order: 1
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      layout: { padding: { top: 30, right: 10, bottom: 0 } },
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { position: 'top', labels: { color: mutedColor, font: { size: 12 }, padding: 16,
-          generateLabels: chart => [
-            { text: 'Faturamento', fillStyle: 'rgba(224,58,14,0.85)', strokeStyle: 'transparent', lineWidth: 0 },
-            { text: 'Cupons', fillStyle: '#1a1a2e', strokeStyle: '#1a1a2e', lineWidth: 2, pointStyle: 'circle' }
-          ]
-        }},
-        tooltip: {
-          callbacks: {
-            label: ctx => ctx.dataset.label === 'Faturamento'
-              ? ` R$ ${ctx.raw.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}`
-              : ` ${ctx.raw} cupons`
+    _semanasChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Faturamento',
+            data: weeks.map(w => Math.round(w.total)),
+            backgroundColor: 'rgba(224,58,14,0.85)',
+            borderRadius: 6,
+            barPercentage: 0.55,
+            categoryPercentage: 0.75,
+            yAxisID: 'yFat',
+            order: 2,
+            datalabels: {
+              display: true,
+              formatter: v => fmtM(v),
+              anchor: 'center', align: 'center',
+              color: '#fff', font: { size: 13, weight: '800' }
+            }
+          },
+          {
+            label: 'Cupons',
+            data: weeks.map(w => w.cups),
+            type: 'line',
+            borderColor: '#1a1a2e',
+            backgroundColor: '#1a1a2e',
+            pointBackgroundColor: '#1a1a2e',
+            pointRadius: 5, pointHoverRadius: 7,
+            borderWidth: 2.5,
+            tension: 0.3,
+            yAxisID: 'yCups',
+            order: 1,
+            datalabels: {
+              display: true,
+              formatter: v => v,
+              anchor: 'end', align: 'top', offset: 6,
+              color: '#1a1a2e', font: { size: 12, weight: '800' }
+            }
           }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        layout: { padding: { top: 32, right: 10, bottom: 0 } },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { color: mutedC, font: { size: 12 }, padding: 16 } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.dataset.label === 'Faturamento'
+                ? ' ' + fmtD(ctx.raw)
+                : ' ' + ctx.raw + ' cupons'
+            }
+          },
+          datalabels: { display: true }
         },
-        datalabels: {
-          display: ctx => ctx.dataset.label === 'Faturamento',
-          formatter: v => fmtM(v),
-          anchor: 'center', align: 'center', offset: 0,
-          color: '#fff', font: { size: 13, weight: '800' }
+        scales: {
+          x: { grid:{display:false}, ticks:{color:mutedC, font:{size:12,weight:'600'}} },
+          yFat: {
+            position: 'left',
+            ticks: { color:mutedC, font:{size:11}, callback: v => 'R$'+(v/1000).toFixed(0)+'k' },
+            grid: { color:borderC },
+            title: { display:true, text:'Faturamento (R$)', color:mutedC, font:{size:10} }
+          },
+          yCups: {
+            position: 'right',
+            ticks: { color:mutedC, font:{size:11} },
+            grid: { display:false },
+            title: { display:true, text:'Cupons', color:mutedC, font:{size:10} }
+          }
         }
       },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: mutedColor, font: { size: 12, weight: '600' } } },
-        yFat: {
-          position: 'left',
-          ticks: { color: mutedColor, font: { size: 11 }, callback: v => 'R$' + (v/1000).toFixed(0) + 'mil' },
-          grid: { color: borderColor },
-          title: { display: true, text: 'Faturamento (R$)', color: mutedColor, font: { size: 10 } }
-        },
-        yCups: {
-          position: 'right',
-          ticks: { color: mutedColor, font: { size: 11 } },
-          grid: { display: false },
-          title: { display: true, text: 'Cupons', color: mutedColor, font: { size: 10 } }
-        }
-      }
-    },
-    plugins: [ChartDataLabels, {
-      id: 'cuponLabels',
-      afterDatasetsDraw(chart) {
-        const ds = chart.data.datasets.find(d => d.label === 'Cupons');
-        if (!ds) return;
-        const meta = chart.getDatasetMeta(chart.data.datasets.indexOf(ds));
-        const ctx2 = chart.ctx;
-        meta.data.forEach((point, i) => {
-          const v = ds.data[i];
-          if (v == null) return;
-          ctx2.save();
-          ctx2.font = 'bold 12px sans-serif';
-          ctx2.fillStyle = '#1a1a2e';
-          ctx2.textAlign = 'center';
-          ctx2.fillText(v.toLocaleString('pt-BR'), point.x, point.y - 12);
-          ctx2.restore();
-        });
-      }
-    }]
-  });
-
-  // Table
-  if (tabela) {
-    const cols = ['SEMANA','FATURAMENTO','VAR. %','CUPONS','VAR. %','TICKET MÉDIO','VAR. %','MÉDIA/DIA'];
-    let rows = weeks.map((w, i) => {
-      const prev = weeks[i-1];
-      const vFat  = prev ? pct(w.total, prev.total) : null;
-      const vCups = prev ? pct(w.cups, prev.cups)   : null;
-      const vTk   = prev ? pct(w.total/w.cups, prev.total/prev.cups) : null;
-      const ticket = w.cups ? w.total/w.cups : 0;
-      const avgDia = w.days.length ? w.total/w.days.length : 0;
-      const varFmt = v => v === null ? '—' : `<span style="color:${v>=0?'#22c55e':'#ef4444'}">${v>=0?'+':''}${v.toFixed(1)}%</span>`;
-      return `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:9px 12px;font-weight:600">${w.label}</td>
-        <td style="padding:9px 12px;text-align:right">${fmtD(w.total)}</td>
-        <td style="padding:9px 12px;text-align:right">${varFmt(vFat)}</td>
-        <td style="padding:9px 12px;text-align:right">${w.cups.toLocaleString('pt-BR')}</td>
-        <td style="padding:9px 12px;text-align:right">${varFmt(vCups)}</td>
-        <td style="padding:9px 12px;text-align:right">${fmtD(ticket)}</td>
-        <td style="padding:9px 12px;text-align:right">${varFmt(vTk)}</td>
-        <td style="padding:9px 12px;text-align:right">${fmtD(avgDia)}</td>
-      </tr>`;
+      plugins: [ChartDataLabels]
     });
-    const totFat = weeks.reduce((s,w)=>s+w.total,0);
-    const totCups = weeks.reduce((s,w)=>s+w.cups,0);
-    const totDias = weeks.reduce((s,w)=>s+w.days.length,0);
-    rows.push(`<tr style="border-top:2px solid var(--border);font-weight:700;background:var(--bg2)">
-      <td style="padding:10px 12px;border-radius:6px 0 0 6px">TOTAL</td>
-      <td style="padding:10px 12px;text-align:right">${fmtD(totFat)}</td>
-      <td style="padding:10px 12px;text-align:right"></td>
-      <td style="padding:10px 12px;text-align:right">${totCups.toLocaleString('pt-BR')}</td>
-      <td style="padding:10px 12px;text-align:right"></td>
-      <td style="padding:10px 12px;text-align:right">${fmtD(totCups?totFat/totCups:0)}</td>
-      <td style="padding:10px 12px;text-align:right"></td>
-      <td style="padding:10px 12px;text-align:right;border-radius:0 6px 6px 0">${fmtD(totDias?totFat/totDias:0)}</td>
-    </tr>`);
 
-    tabela.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px">
-      <thead><tr style="background:var(--bg2);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase">
-        ${cols.map((h,i) => `<th style="padding:8px 12px;text-align:${i===0?'left':'right'};${i===0?'border-radius:6px 0 0 6px':''}${i===cols.length-1?'border-radius:0 6px 6px 0':''}">${h}</th>`).join('')}
-      </tr></thead>
-      <tbody>${rows.join('')}</tbody>
-    </table>`;
-  }
+    // Table
+    if (tabela) {
+      const cols = ['SEMANA','FATURAMENTO','VAR. %','CUPONS','VAR. %','TICKET MÉDIO','VAR. %','MÉDIA/DIA'];
+      const rows = weeks.map((w,i) => {
+        const prev = weeks[i-1];
+        const vFat  = prev ? pct(w.total, prev.total) : null;
+        const vCups = prev ? pct(w.cups,  prev.cups)  : null;
+        const tk    = w.cups ? w.total/w.cups : 0;
+        const vTk   = (prev && prev.cups) ? pct(tk, prev.total/prev.cups) : null;
+        const varFmt = v => v===null ? '—' : `<span style="color:${v>=0?'#22c55e':'#ef4444'}">${v>=0?'+':''}${v.toFixed(1)}%</span>`;
+        return `<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:9px 12px;font-weight:600">${w.label}</td>
+          <td style="padding:9px 12px;text-align:right">${fmtD(w.total)}</td>
+          <td style="padding:9px 12px;text-align:right">${varFmt(vFat)}</td>
+          <td style="padding:9px 12px;text-align:right">${w.cups.toLocaleString('pt-BR')}</td>
+          <td style="padding:9px 12px;text-align:right">${varFmt(vCups)}</td>
+          <td style="padding:9px 12px;text-align:right">${fmtD(tk)}</td>
+          <td style="padding:9px 12px;text-align:right">${varFmt(vTk)}</td>
+          <td style="padding:9px 12px;text-align:right">${fmtD(w.days.length?w.total/w.days.length:0)}</td>
+        </tr>`;
+      });
+      const totFat = weeks.reduce((s,w)=>s+w.total,0);
+      const totCups = weeks.reduce((s,w)=>s+w.cups,0);
+      const totDias = weeks.reduce((s,w)=>s+w.days.length,0);
+      rows.push(`<tr style="border-top:2px solid var(--border);font-weight:700;background:var(--bg2)">
+        <td style="padding:10px 12px">TOTAL</td>
+        <td style="padding:10px 12px;text-align:right">${fmtD(totFat)}</td><td></td>
+        <td style="padding:10px 12px;text-align:right">${totCups.toLocaleString('pt-BR')}</td><td></td>
+        <td style="padding:10px 12px;text-align:right">${fmtD(totCups?totFat/totCups:0)}</td><td></td>
+        <td style="padding:10px 12px;text-align:right">${fmtD(totDias?totFat/totDias:0)}</td>
+      </tr>`);
+      tabela.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:var(--bg2);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase">
+          ${cols.map((h,i)=>`<th style="padding:8px 12px;text-align:${i===0?'left':'right'}">${h}</th>`).join('')}
+        </tr></thead><tbody>${rows.join('')}</tbody></table>`;
+    }
+  } catch(e) { console.error('renderSemanasChart error:', e); }
 }
 
-function renderPeriodoResumo() {
-  const deEl  = document.getElementById('periodo-de');
-  const ateEl = document.getElementById('periodo-ate');
-  const out   = document.getElementById('periodo-resultado');
-  if (!deEl || !ateEl || !out) return;
-
-  const deVal = deEl.value, ateVal = ateEl.value;
-  if (!deVal || !ateVal) { out.innerHTML = '<p style="color:var(--muted);font-size:13px">Selecione as duas datas.</p>'; return; }
-
-  const toDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
-  const de = toDate(deVal), ate = toDate(ateVal);
-  if (de > ate) { out.innerHTML = '<p style="color:#ef4444;font-size:13px">Data \"De\" deve ser anterior à \"Até\".</p>'; return; }
-
-  const daily = RAW.daily_combined || {};
-  const fmt  = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const fmtN = v => (v||0).toLocaleString('pt-BR');
-
-  const CANAIS = [
-    { key:'salao',  cup:'salao_cups',  label:'\u{1FA91} Salão'  },
-    { key:'ifood',  cup:'ifood_cups',  label:'\u{1F6F5} iFood'  },
-    { key:'food99', cup:'food99_cups', label:'\u{1F7E1} 99food' },
-    { key:'keeta',  cup:'keeta_cups',  label:'\u{1F535} Keeta'  },
-  ];
-
-  let totFat = 0, totCups = 0, dias = 0;
-  const ch = {}; CANAIS.forEach(c => { ch[c.key] = {fat:0,cups:0}; });
-
-  Object.entries(daily).forEach(([dateStr, d]) => {
-    if (dateStr.length !== 10) return;
-    const [dd,mm,yyyy] = dateStr.split('/').map(Number);
-    const dt = new Date(yyyy, mm-1, dd);
-    if (dt < de || dt > ate) return;
-    dias++;
-    totFat  += d.total   || 0;
-    totCups += d.coupons || 0;
-    CANAIS.forEach(c => { ch[c.key].fat += d[c.key]||0; ch[c.key].cups += d[c.cup]||0; });
-  });
-
-  if (dias === 0) { out.innerHTML = '<p style="color:var(--muted);font-size:13px">Nenhum dado encontrado para este período.</p>'; return; }
-
-  const ticketTotal = totCups ? totFat / totCups : 0;
-
-  let rows = '';
-  CANAIS.forEach(c => {
-    const f = ch[c.key].fat, n = ch[c.key].cups;
-    if (!f && !n) return;
-    const pct = totFat ? (f/totFat*100).toFixed(1) : '0.0';
-    const tk  = n ? f/n : 0;
-    rows += `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:9px 12px;font-weight:600">${c.label}</td>
-      <td style="padding:9px 12px;text-align:right">${fmt(f)}</td>
-      <td style="padding:9px 12px;text-align:right;color:var(--muted)">${pct}%</td>
-      <td style="padding:9px 12px;text-align:right">${fmtN(n)}</td>
-      <td style="padding:9px 12px;text-align:right;font-weight:700;color:var(--accent)">${fmt(tk)}</td>
-    </tr>`;
-  });
-
-  out.innerHTML = `
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">
-      <div style="background:var(--bg2);border-radius:10px;padding:12px 20px;flex:1;min-width:130px;text-align:center">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">FATURAMENTO</div>
-        <div style="font-size:22px;font-weight:800;color:var(--accent)">${fmt(totFat)}</div>
-        <div style="font-size:11px;color:var(--muted)">${dias} dia${dias>1?'s':''} · ${fmt(totFat/dias)}/dia</div>
-      </div>
-      <div style="background:var(--bg2);border-radius:10px;padding:12px 20px;flex:1;min-width:130px;text-align:center">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">CUPONS</div>
-        <div style="font-size:22px;font-weight:800;color:#6366f1">${fmtN(totCups)}</div>
-        <div style="font-size:11px;color:var(--muted)">${(totCups/dias).toFixed(1)}/dia</div>
-      </div>
-      <div style="background:var(--bg2);border-radius:10px;padding:12px 20px;flex:1;min-width:130px;text-align:center">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">TICKET MÉDIO</div>
-        <div style="font-size:22px;font-weight:800;color:#22c55e">${fmt(ticketTotal)}</div>
-        <div style="font-size:11px;color:var(--muted)">faturamento ÷ cupons</div>
-      </div>
-    </div>
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead>
-          <tr style="background:var(--bg2);color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase">
-            <th style="text-align:left;padding:8px 12px;border-radius:6px 0 0 6px">Canal</th>
-            <th style="text-align:right;padding:8px 12px">Faturamento</th>
-            <th style="text-align:right;padding:8px 12px">Part.%</th>
-            <th style="text-align:right;padding:8px 12px">Cupons</th>
-            <th style="text-align:right;padding:8px 12px;border-radius:0 6px 6px 0">Ticket Médio</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-          <tr style="border-top:2px solid var(--border);font-weight:700;background:var(--bg2)">
-            <td style="padding:10px 12px;border-radius:6px 0 0 6px">TOTAL</td>
-            <td style="padding:10px 12px;text-align:right">${fmt(totFat)}</td>
-            <td style="padding:10px 12px;text-align:right;color:var(--muted)">100%</td>
-            <td style="padding:10px 12px;text-align:right">${fmtN(totCups)}</td>
-            <td style="padding:10px 12px;text-align:right;color:#22c55e;border-radius:0 6px 6px 0">${fmt(ticketTotal)}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>`;
-}
 
 function renderChannels() {
   const RM  = getRM();
@@ -5909,14 +5785,12 @@ function renderChannels() {
 
     const _juneFore = (activeYear === '2026') ? getJuneForecast2026() : null;
   const _julFore  = (activeYear === '2026') ? getJulyForecast2026()  : null;
-  const _sepFore  = (activeYear === '2026') ? getSeptemberForecast2026() : null;
     chartMnums.forEach(m => {
       const d = RM[m] || {};
-      // June/July/September 2026: use forecast projection values
+      // June/July 2026: use forecast projection values
       const _isForeJun = activeYear === '2026' && m === '06' && _juneFore;
       const _isForeJul = activeYear === '2026' && m === '07' && _julFore;
-      const _isForeSep = activeYear === '2026' && m === '09' && _sepFore;
-      const _fore = _isForeJun ? _juneFore : _isForeJul ? _julFore : _isForeSep ? _sepFore : null;
+      const _fore = _isForeJun ? _juneFore : _isForeJul ? _julFore : null;
       const _isForeMonth = !!_fore;
       const sv = _fore ? (_fore.salao||0) : (d.salao_val||0);
       const iv = _fore ? (_fore.ifood||0) : (d.ifood_val||0);
@@ -5941,20 +5815,17 @@ function renderChannels() {
       totalSalaoCups+=(d.salao_cups||0); totalIfoodCups+=(d.ifood_cups||0); totalKeetaCups+=(d.keeta_cups||0);
     });
 
-    // Forecast remainder for incomplete months (July/September 2026)
+    // Forecast remainder for incomplete months (July 2026)
     chartMnums.forEach((m, i) => {
       if (m === '07' && activeYear === '2026' && _julFore) {
         const realSum = (salaoData[i]||0) + (ifoodData[i]||0) + (food99Data[i]||0) + (keetaData[i]||0);
         foreData.push(_julFore.total > realSum ? round2(_julFore.total - realSum) : 0);
-      } else if (m === '09' && activeYear === '2026' && _sepFore) {
-        const realSum = (salaoData[i]||0) + (ifoodData[i]||0) + (food99Data[i]||0) + (keetaData[i]||0);
-        foreData.push(_sepFore.total > realSum ? round2(_sepFore.total - realSum) : 0);
       } else { foreData.push(0); }
     });
 
     chartMnums.forEach(m => {
       const d = RM[m]||{};
-      const _tFore = (activeYear==='2026'&&m==='06'&&_juneFore) ? _juneFore : (activeYear==='2026'&&m==='07'&&_julFore) ? _julFore : (activeYear==='2026'&&m==='09'&&_sepFore) ? _sepFore : null;
+      const _tFore = (activeYear==='2026'&&m==='06'&&_juneFore) ? _juneFore : (activeYear==='2026'&&m==='07'&&_julFore) ? _julFore : null;
       const sv=_tFore?(_tFore.salao||0):(d.salao_val||0);
       const iv=_tFore?(_tFore.ifood||0):(d.ifood_val||0);
       const f9=_tFore?(_tFore.food99||0):(d.food99_val||0);
@@ -6313,9 +6184,9 @@ function computeChannelMixProducts(monthFilter, yearFilter, dayFilter) {
     };
 
     const list = Object.entries(CP).map(([name, d]) => {
-      const salaoFull = d.salao||0, ifoodFull = d.ifood||0, food99Full = d.food99||0, keetaFull = d.keeta||0;
-      const totalFull = salaoFull + ifoodFull + food99Full + keetaFull;
-      let salao = salaoFull, ifood = ifoodFull, food99 = food99Full, keeta = keetaFull;
+      const salaoFull = d.salao||0, ifoodFull = d.ifood||0, food99Full = d.food99||0;
+      const totalFull = salaoFull + ifoodFull + food99Full;
+      let salao = salaoFull, ifood = ifoodFull, food99 = food99Full;
       if (monthFilter !== 'all') {
         const prod = fuzzyMatch(name);
         if (prod && prod.dates) {
@@ -6328,16 +6199,14 @@ function computeChannelMixProducts(monthFilter, yearFilter, dayFilter) {
           salao  = Math.round(salaoFull  * ratio);
           ifood  = Math.round(ifoodFull  * ratio);
           food99 = Math.round(food99Full * ratio);
-          keeta  = Math.round(keetaFull  * ratio);
         } else {
           // Fallback: proporcional à receita do mês
           salao  = Math.round(salaoFull  * monthRevPct);
           ifood  = Math.round(ifoodFull  * monthRevPct);
           food99 = Math.round(food99Full * monthRevPct);
-          keeta  = Math.round(keetaFull  * monthRevPct);
         }
       }
-      return { name, salao, ifood, food99, keeta, cat: displayCat(d.cat, name), size: d.size||'', cname: d.cname||name, matched: true };
+      return { name, salao, ifood, food99, cat: displayCat(d.cat, name), size: d.size||'', cname: d.cname||name, matched: true };
     });
     return { list, mode: 'real', anyUnmatched: false };
   }
@@ -6566,8 +6435,10 @@ function renderChannelMix() {
     data: {
       labels,
       datasets: [
-        { label: '🏠 Salão',    data: top20.map(p => p.salao||0),  backgroundColor: 'rgba(224,58,14,0.85)', borderRadius: 3 },
-        { label: '📦 Delivery', data: top20.map(p => (p.ifood||0)+(p.food99||0)+(p.keeta||0)), backgroundColor: 'rgba(200,16,46,0.85)', borderRadius: 3 }
+        { label: '🏠 Salão',  data: top20.map(p => p.salao||0),  backgroundColor: 'rgba(224,58,14,0.85)',  borderRadius: 3 },
+        { label: '📱 iFood',  data: top20.map(p => p.ifood||0),  backgroundColor: 'rgba(200,16,46,0.85)',  borderRadius: 3 },
+        { label: '🟠 99food', data: top20.map(p => p.food99||0), backgroundColor: 'rgba(224,112,0,0.85)', borderRadius: 3 },
+        { label: '🟢 Keeta',  data: top20.map(p => p.keeta||0),  backgroundColor: 'rgba(0,176,155,0.85)',  borderRadius: 3 }
       ]
     },
     options: {
@@ -6590,9 +6461,9 @@ function renderChannelMix() {
               color: '#fff', font: { size: 9, weight: '700' },
               anchor: 'center', align: 'center', clamp: true
             },
-            // Total em cima da última barra (Delivery)
+            // Total em cima da última barra (99food)
             total: {
-              display: ctx => ctx.datasetIndex === 1,
+              display: ctx => ctx.datasetIndex === 3,
               formatter: (v, ctx) => {
                 const i = ctx.dataIndex;
                 const ds = ctx.chart.data.datasets;
@@ -6924,8 +6795,6 @@ function renderFollowup() {
   _fdMon.forEach(d => { const p=d.data.split('/'); foreMap[p[0]+'/'+p[1]+'/2026'] = d; });
   const pastProj   = pastDates.reduce((s,d) => { const fd=foreMap[d]; return s+(fd?.forecast ?? fd?.meta ?? fd?.real ?? 0); }, 0);
   const pastVsProj = pastProj > 0 ? (pastRev - pastProj) / pastProj * 100 : null;
-  const pastMeta   = pastDates.reduce((s,d) => { const fd=foreMap[d]; return s+(fd?.meta||0); }, 0);
-  const pastVsMeta = pastMeta > 0 ? (pastRev - pastMeta) / pastMeta * 100 : null;
 
   // Next week: use forecast data where available, otherwise estimate with avg
   const pastDailyAvg = pastDays > 0 ? pastRev/pastDays : 0;
@@ -7021,12 +6890,10 @@ function renderFollowup() {
   const _salaoVal  = _foreDataForMon ? round2(_foreDataForMon.salao)  : (rm26[_mesNum]?.salao_val  || 0);
   const _ifoodVal  = _foreDataForMon ? round2(_foreDataForMon.ifood)  : (rm26[_mesNum]?.ifood_val  || 0);
   const _food99Val = _foreDataForMon ? round2(_foreDataForMon.food99) : (rm26[_mesNum]?.food99_val || 0);
-  const _keetaVal  = rm26[_mesNum]?.keeta_val || 0;
-  const _storeOnly = _salaoVal + _ifoodVal + _food99Val + _keetaVal;
-  const _salaoP    = _storeOnly > 0 ? _salaoVal/_storeOnly*100   : 0;
-  const _ifoodP    = _storeOnly > 0 ? _ifoodVal/_storeOnly*100   : 0;
-  const _f99P      = _storeOnly > 0 ? _food99Val/_storeOnly*100  : 0;
-  const _keetaP    = _storeOnly > 0 ? _keetaVal/_storeOnly*100   : 0;
+  const _storeOnly = _salaoVal + _ifoodVal + _food99Val + (rm26[_mesNum]?.keeta_val || 0);
+  const _salaoP    = _storeOnly > 0 ? _salaoVal/_storeOnly*100  : 0;
+  const _ifoodP    = _storeOnly > 0 ? _ifoodVal/_storeOnly*100  : 0;
+  const _f99P      = _storeOnly > 0 ? _food99Val/_storeOnly*100 : 0;
 
   // SSS vs 2025 (store-only, para comparação justa)
   const _june25Store = rm25[_mesNum]?.total || 0;
@@ -7161,17 +7028,18 @@ function renderFollowup() {
   ].join('\n');
   window._fuSummaryText = _headText;
   if (headEl) headEl.innerHTML = _isMesFechado
-    ? `<span style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">✅ Fechamento ${_MES_FULL[_mesNum].slice(0,3)}'${String(_anoAtivo).slice(2)}</span>
+    ? `<span style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">✅ Fechamento ${_MES_FULL[_mesNum]} ${_anoAtivo}</span>
+       &nbsp;·&nbsp;<strong>${fmtR(_storeOnly)}</strong> loja&nbsp;+&nbsp;<strong style="color:rgba(162,89,255,0.9)">${fmtR(_juneEvTotal)}</strong> eventos
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Faturamento:</span> <strong>${fmtR(_storeOnly)}</strong>${_juneEvTotal > 0 ? ` <span style="color:var(--muted)">+ ${fmtR(_juneEvTotal)} eventos</span>` : ''}
+       <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
+       &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
+       &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Meta:</span> <span style="color:${_vsMetaColor};font-weight:700">${_vsMetaSign}${fmt(_vsMetaPct,1)}%</span>
+       <span style="color:var(--muted)">vs meta</span> <span style="color:${_vsMetaColor};font-weight:700">${_vsMetaSign}${fmt(_vsMetaPct,1)}%</span>
+       &nbsp;·&nbsp;<span style="color:var(--muted)">vs proj.</span> <span style="color:${_vsProjColor};font-weight:700">${_vsProjSign}${fmt(_vsProjPct,1)}%</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">vs ${_anoAtivo-1}:</span> <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span>
-       &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Mix:</span> Salão <strong>${fmt(_salaoP,1)}%</strong> &nbsp;·&nbsp; Delivery <strong>${fmt(_ifoodP+_f99P+_keetaP,1)}%</strong>
-       &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Média/dia:</span> <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
+       SSS loja <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span> vs ${_anoAtivo-1}
+       &nbsp;·&nbsp;Média/dia <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
        `
     : _isMonthForecast
     ? `<span style="font-size:13px;font-weight:800;color:#22c55e;text-transform:uppercase;letter-spacing:.5px">🎯 Expectativa ${_MES_FULL[_mesNum]} ${_anoAtivo}</span>
@@ -7181,7 +7049,7 @@ function renderFollowup() {
        <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>`
-    : `<span style="color:var(--muted)">Semana ${_weekStart}–${_weekEnd}:</span> <strong>${fmtR(pastRev)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(pastMeta)}</strong>${pastVsMeta!=null?` <span style="color:${pastVsMeta>=0?'#06d6a0':'#ff4444'};font-weight:700">(${pastVsMeta>=0?'+':''}${fmt(pastVsMeta,1)}%)</span>`:''} · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> de <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_metaStretch6>0?juneReal/_metaStretch6*100:0,1)}%)</span> · <span style="color:var(--muted)">Real vs proj.:</span> <strong>${fmtR(juneReal)}</strong> vs <strong>${fmtR(_projFinalFU)}</strong>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
+    : `Semana passada: <strong>${fmtR(pastRev)}</strong>${pastVsProj!=null?` <span style="color:${pvpColor};font-weight:700">(${fmt(Math.abs(pastVsProj),1)}% ${pvpSign} do proj.)</span>`:''} · Esta semana: <strong>${fmtR(nextProjRev)}</strong> projetado · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> <span style="color:${_pctForeColor};font-weight:700">(${fmt(_pctForeHead,1)}% do mês)</span> · Projeção mês: <strong>${fmtR(_projFinalFU)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_pctMetaStretch,1)}%${_faltaMeta6>0?' · falta '+fmtR(_faltaMeta6):' ✅'})</span> · SSS proj. vs ${parseInt(activeYear)-1}: <span style="color:${_sssFullColor};font-weight:700">${_sssFull>=0?'+':''}${fmt(_sssFull,1)}%</span>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
 
   // ── Venda Diária vs Meta (substituiu Mês em Andamento) ─────────────
   {
@@ -7198,8 +7066,7 @@ function renderFollowup() {
     const fdBarData = FD.map(d => {
       if (!d.is_real) return null;
       if (d.real == null) return null;
-      const _chs = (d.salao||0)+(d.ifood||0)+(d.food99||0)+(d.keeta||0);
-    return round2(_chs > 0 ? _chs : (d.real || 0));
+      return round2((d.salao || 0) + (d.ifood || 0) + (d.food99 || 0) + (d.keeta || 0));
     });
     const fdMetaData  = FD.map(d => d.meta);
     const fdEventoData = FD.map(d => {
@@ -7577,6 +7444,7 @@ function renderFollowup() {
         : [
             barRow('📅 Semana vs Projeção', pastRev, pastProj||pastRev, 'rgba(224,58,14,0.85)', `proj. ${fmtR(pastProj||0)}`),
             barRow(`📆 ${_MES_FULL[_mesAcum]} vs Meta`, _gStore, _gMetaStretch, 'rgba(224,58,14,0.75)', `meta ${fmtR(_gMetaStretch)}`),
+            barRow(`📆 ${_MES_FULL[_mesAcum]} + Eventos`, _gTotal, _gMetaStretch, 'rgba(162,89,255,0.75)', `meta +6% ${fmtR(_gMetaStretch)}`),
           ].join('');
     }
   }
@@ -7623,8 +7491,8 @@ function renderFollowup() {
   destroyChart('fuCouponFuChart');
   destroyChart('fuTicketFuChart');
   {
-    const tkMonths = ['01','02','03','04','05','06','07','08','09'];
-    const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set'}[m]));
+    const tkMonths = ['01','02','03','04','05','06','07'];
+    const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul'}[m]));
     const dlTop = { anchor:'end', align:'end', offset:2, clamp:true,
       backgroundColor:'rgba(255,255,255,0.82)', borderRadius:3,
       padding:{top:2,bottom:2,left:4,right:4} };
@@ -7701,13 +7569,10 @@ function renderFollowup() {
   // ── SSS mensal (Jan–Jun real + Julho forecast) ───────────────────────
   const _juneEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='06'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _juneForeWithEvFixed = juneForeTotal + _juneEvFixed;
-  const _julEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _julForeEvFixed = getActiveForecastMonth(activeYear, '07').metaTotal
     + (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
-  const _sepEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='09'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
-  const _sepForeEvFixed = (activeYear==='2026' ? (getSeptemberForecast2026()?.total||0) : (getActiveForecastMonth(activeYear,'09').metaTotal||0)) + _sepEvFixed;
-  const MN_SSS = ['01','02','03','04','05','06','07','08','09'];
-  const sss26  = MN_SSS.map(m => m==='06' ? _juneForeWithEvFixed : m==='07' ? _julForeEvFixed : m==='09' ? _sepForeEvFixed : rm26[m]?.total||0);
+  const MN_SSS = ['01','02','03','04','05','06','07'];
+  const sss26  = MN_SSS.map(m => m==='06' ? _juneForeWithEvFixed : m==='07' ? _julForeEvFixed : rm26[m]?.total||0);
   const sss25  = MN_SSS.map(m => rm25[m]?.total||0);
   const sssPct = MN_SSS.map((m,i) => sss25[i]>0 ? +((sss26[i]-sss25[i])/sss25[i]*100).toFixed(1) : 0);
 
@@ -7727,24 +7592,13 @@ function renderFollowup() {
       return { salao: Math.round(base*sMix), delivery: Math.round(base*dMix), evento: ev };
     }
     if (m === '07') {
-      const ev7 = _julEvFixed;
-      const base7 = _julForeEvFixed - ev7;
-      const d07 = rm26['07'] || {};
-      const opTot07 = d07.total || 0;
-      const sMix7 = opTot07 > 0 ? (d07.salao_val||0)/opTot07 : 0.50;
-      const dMix7 = opTot07 > 0 ? ((d07.ifood_val||0)+(d07.food99_val||0)+(d07.keeta_val||0))/opTot07 : 0.50;
-      return { salao: Math.round(base7*sMix7), delivery: Math.round(base7*dMix7), evento: ev7 };
+      const mn6 = ['01','02','03','04','05','06'];
+      const tS  = mn6.reduce((s,mm)=>s+(rm26[mm]?.salao_val||0),0);
+      const tD  = mn6.reduce((s,mm)=>s+((rm26[mm]?.ifood_val||0)+(rm26[mm]?.food99_val||0)),0);
+      const tot = tS+tD||1;
+      return { salao: Math.round(_julForeEvFixed*tS/tot), delivery: Math.round(_julForeEvFixed*tD/tot), evento: 0 };
     }
-    if (m === '09') {
-      const ev9 = _sepEvFixed;
-      const base9 = _sepForeEvFixed - ev9;
-      const d09 = rm26['09'] || {};
-      const opTot09 = d09.total || 0;
-      const sMix9 = opTot09 > 0 ? (d09.salao_val||0)/opTot09 : 0.43;
-      const dMix9 = opTot09 > 0 ? ((d09.ifood_val||0)+(d09.food99_val||0)+(d09.keeta_val||0))/opTot09 : 0.57;
-      return { salao: Math.round(base9*sMix9), delivery: Math.round(base9*dMix9), evento: ev9 };
-    }
-    return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0)+(d.keeta_val||0), evento: 0 };
+    return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0), evento: 0 };
   };
   const _chanSplit25 = (m) => {
     const d = rm25[m] || {};
@@ -7793,7 +7647,7 @@ function renderFollowup() {
       },
       // ── 2026 direita ──────────────────────────────────────────────
       { label: '🏠 Salão 2026', data: s26d,
-        backgroundColor: MN_SSS.map(m => m==='09' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
+        backgroundColor: MN_SSS.map(m => m==='07' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
         borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
         datalabels: { display: ctx => s26d[ctx.dataIndex] > 0 && sss26[ctx.dataIndex] > 0,
@@ -7802,7 +7656,7 @@ function renderFollowup() {
           anchor: 'center', align: 'center' }
       },
       { label: '🛵 Delivery 2026', data: d26d,
-        backgroundColor: MN_SSS.map(m => m==='09' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
+        backgroundColor: MN_SSS.map(m => m==='07' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
         borderRadius: MN_SSS.map((_,i) => e26d[i] > 0 ? 0 : 3),
         barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
@@ -7859,11 +7713,11 @@ function renderFollowup() {
   const sssBody = document.getElementById('fu-sss-body');
   if (sssBody) sssBody.innerHTML = MN_SSS.map((m,i) => {
     const v26=sss26[i], v25=sss25[i], pct=sssPct[i];
-    const isFore = m==='09';
-    const _rowBg  = m==='09' ? 'background:rgba(34,197,94,0.04)' : '';
+    const isFore = m==='07';
+    const _rowBg  = m==='07' ? 'background:rgba(34,197,94,0.04)' : '';
     return `<tr style="border-bottom:1px solid var(--border);${_rowBg}">
       <td style="padding:6px 8px;font-weight:700">${MN_FULL[m]}${isFore?' <span style="font-size:10px;color:var(--muted)">(proj.)</span>':''}</td>
-      <td style="padding:6px 8px;text-align:right;font-weight:700;color:${m==='09'?'#22c55e':'var(--accent)'}">${fmtR(v26)}</td>
+      <td style="padding:6px 8px;text-align:right;font-weight:700;color:${m==='07'?'#22c55e':'var(--accent)'}">${fmtR(v26)}</td>
       <td style="padding:6px 8px;text-align:right;color:var(--muted)">${fmtR(v25)}</td>
       <td style="padding:6px 8px;text-align:right;font-weight:700;color:${pct>=0?'#06d6a0':'#ff4444'}">${pct>=0?'+':''}${pct}%</td>
       <td style="padding:6px 8px;text-align:right">${rm26[m]?.ticket>0?fmtR(rm26[m].ticket):'—'}</td>
@@ -7884,7 +7738,7 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 
   if (name === 'overview') { renderOverview(); renderDailyChart(); }
-  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); renderNovosAuv(); }
+  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); }
   else if (name === 'channels') { renderChannels(); renderChannelMix(); }
   else if (name === 'followup') renderFollowup();
   else if (name === 'sss') renderSSS();
@@ -7906,7 +7760,7 @@ function showTab(name) {
 // precisa ser alterada — getActiveForecastMonth() encontra o mês
 // automaticamente.
 // ===DASH-FORECAST-DATA-START===
-const FORECAST_BY_MONTH = {"2026-06":{"dias":[{"data":"02/06","dia":"Ter","meta":2542.76,"real":1865.0,"forecast":null,"is_real":true,"salao":688.0,"ifood":1177.0,"food99":0.0},{"data":"03/06","dia":"Qua","meta":4950.72,"real":8749.6,"forecast":null,"is_real":true,"salao":4201.6,"ifood":4548.0,"food99":0.0},{"data":"04/06","dia":"Qui","meta":5917.99,"real":5826.0,"forecast":null,"is_real":true,"salao":3621.0,"ifood":2205.0,"food99":0.0},{"data":"05/06","dia":"Sex","meta":9587.87,"real":4129.0,"forecast":null,"is_real":true,"salao":1964.0,"ifood":2165.0,"food99":0.0},{"data":"06/06","dia":"Sáb","meta":6650.68,"real":4057.0,"forecast":null,"is_real":true,"salao":2169.0,"ifood":1888.0,"food99":0.0},{"data":"07/06","dia":"Dom","meta":6420.24,"real":5094.8,"forecast":null,"is_real":true,"salao":2040.8,"ifood":3054.0,"food99":0.0},{"data":"09/06","dia":"Ter","meta":2542.76,"real":2712.0,"forecast":null,"is_real":true,"salao":1286.0,"ifood":1369.0,"food99":57.0},{"data":"10/06","dia":"Qua","meta":4950.72,"real":5042.8,"forecast":null,"is_real":true,"salao":2695.8,"ifood":2066.0,"food99":281.0},{"data":"11/06","dia":"Qui","meta":5917.99,"real":4805.0,"forecast":null,"is_real":true,"salao":2120.0,"ifood":2595.0,"food99":90.0},{"data":"12/06","dia":"Sex","meta":9587.87,"real":8997.4,"forecast":null,"is_real":true,"salao":4666.4,"ifood":4272.0,"food99":59.0},{"data":"13/06","dia":"Sáb","meta":6650.68,"real":5446.4,"forecast":null,"is_real":true,"salao":3105.4,"ifood":2203.0,"food99":138.0},{"data":"14/06","dia":"Dom","meta":6420.24,"real":7279.2,"forecast":null,"is_real":true,"salao":2005.2,"ifood":4741.0,"food99":533.0},{"data":"16/06","dia":"Ter","meta":2542.76,"real":2040.0,"forecast":null,"is_real":true,"salao":582.0,"ifood":1178.0,"food99":280.0},{"data":"17/06","dia":"Qua","meta":4950.72,"real":3390.8,"forecast":null,"is_real":true,"salao":2110.8,"ifood":1185.0,"food99":95.0},{"data":"18/06","dia":"Qui","meta":5917.99,"real":4595.2,"forecast":null,"is_real":true,"salao":2338.2,"ifood":1803.0,"food99":454.0},{"data":"19/06","dia":"Sex","meta":9587.87,"real":10114.6,"forecast":null,"is_real":true,"salao":4845.6,"ifood":5189.0,"food99":80.0},{"data":"20/06","dia":"Sáb","meta":6650.68,"real":6533.0,"forecast":null,"is_real":true,"salao":1787.0,"ifood":4027.0,"food99":719.0},{"data":"21/06","dia":"Dom","meta":6420.24,"real":6324.8,"forecast":null,"is_real":true,"salao":2378.8,"ifood":3417.0,"food99":529.0},{"data":"23/06","dia":"Ter","meta":2542.76,"real":2057.0,"forecast":null,"is_real":true,"salao":80.0,"ifood":1586.0,"food99":391.0},{"data":"24/06","dia":"Qua","meta":4950.72,"real":6694.4,"forecast":null,"is_real":true,"salao":2970.4,"ifood":3724.0,"food99":0.0},{"data":"25/06","dia":"Qui","meta":5917.99,"real":4516.0,"forecast":null,"is_real":true,"salao":2987.0,"ifood":1394.0,"food99":135.0},{"data":"26/06","dia":"Sex","meta":9587.87,"real":10472.0,"forecast":null,"is_real":true,"salao":5290.0,"ifood":4815.0,"food99":367.0},{"data":"27/06","dia":"Sáb","meta":6650.68,"real":6056.0,"forecast":null,"is_real":true,"salao":2787.0,"ifood":3042.0,"food99":227.0},{"data":"28/06","dia":"Dom","meta":6420.24,"real":7505.8,"forecast":null,"is_real":true,"salao":4446.8,"ifood":2912.0,"food99":147.0},{"data":"29/06","dia":"Seg","meta":0,"real":0,"forecast":null,"is_real":true,"is_evento":true,"salao":0,"ifood":0,"food99":0},{"data":"30/06","dia":"Ter","meta":2542.76,"real":1722.0,"forecast":null,"is_real":true,"salao":963.0,"ifood":504.0,"food99":255.0}]},"2026-07":{"dias":[{"data":"01/07","dia":"Qua","meta":3831.08,"real":3618.81,"forecast":null,"is_real":true,"salao":2238.8,"ifood":1307.01,"food99":73.0,"cum_real":3618.81,"cum_fore":null,"keeta":0},{"data":"02/07","dia":"Qui","meta":4579.6,"real":5641.8,"forecast":null,"is_real":true,"salao":3471.8,"ifood":2170.0,"food99":0.0,"cum_real":9260.61,"cum_fore":null,"keeta":0},{"data":"03/07","dia":"Sex","meta":7419.51,"real":11256.0,"forecast":null,"is_real":true,"salao":4894.0,"ifood":5801.0,"food99":561.0,"cum_real":20516.61,"cum_fore":null,"keeta":0},{"data":"04/07","dia":"Sáb","meta":5146.58,"real":4455.0,"forecast":null,"is_real":true,"salao":2212.0,"ifood":2144.0,"food99":99.0,"cum_real":24971.61,"cum_fore":null,"keeta":0},{"data":"05/07","dia":"Dom","meta":4968.26,"real":5049.0,"forecast":null,"is_real":true,"salao":2994.0,"ifood":1933.0,"food99":122.0,"cum_real":30020.61,"cum_fore":null,"keeta":0},{"data":"07/07","dia":"Ter","meta":2394.43,"real":1779.0,"forecast":null,"is_real":true,"salao":299.0,"ifood":1162.0,"food99":318.0,"cum_real":31799.61,"cum_fore":null,"keeta":0},{"data":"08/07","dia":"Qua","meta":3831.08,"real":6845.6,"forecast":null,"is_real":true,"salao":4609.9,"ifood":2090.0,"food99":111.0,"keeta":34.7,"cum_real":38645.21,"cum_fore":null},{"data":"09/07","dia":"Qui","meta":4579.6,"real":5969.55,"forecast":null,"is_real":true,"salao":2849.0,"ifood":2561.0,"food99":404.0,"keeta":155.55,"cum_real":44614.76,"cum_fore":null},{"data":"10/07","dia":"Sex","meta":7419.51,"real":4421.25,"forecast":null,"is_real":true,"salao":1815.0,"ifood":2309.0,"food99":235.0,"keeta":62.25,"cum_real":49036.01,"cum_fore":null},{"data":"11/07","dia":"Sáb","meta":5146.58,"real":4058.7,"forecast":null,"is_real":true,"salao":2512.0,"ifood":1309.0,"food99":206.0,"keeta":31.7,"cum_real":53094.71,"cum_fore":null},{"data":"12/07","dia":"Dom","meta":4968.26,"real":5523.81,"forecast":null,"is_real":true,"salao":1492.8,"ifood":3219.0,"food99":473.0,"keeta":339.01,"cum_real":58618.52,"cum_fore":null},{"data":"14/07","dia":"Ter","meta":2394.43,"real":1479.0,"forecast":null,"is_real":true,"salao":305.0,"ifood":788.0,"food99":386.0,"cum_real":60097.52,"cum_fore":null,"keeta":0},{"data":"15/07","dia":"Qua","meta":3831.08,"real":3410.18,"forecast":null,"is_real":true,"salao":2457.0,"ifood":778.0,"food99":140.0,"cum_real":63507.7,"cum_fore":null,"keeta":35.18},{"data":"16/07","dia":"Qui","meta":4579.6,"real":5952.72,"forecast":null,"is_real":true,"salao":2894.2,"ifood":2426.0,"food99":490.0,"cum_real":69460.42,"cum_fore":null,"keeta":142.52},{"data":"17/07","dia":"Sex","meta":7419.51,"real":7318.92,"forecast":null,"is_real":true,"salao":3760.0,"ifood":3465.0,"food99":0.0,"cum_real":76779.34,"cum_fore":null,"keeta":93.92},{"data":"18/07","dia":"Sáb","meta":5146.58,"real":6146.15,"forecast":null,"is_real":true,"salao":2174.0,"ifood":2840.01,"food99":811.0,"cum_real":82925.49,"cum_fore":null,"keeta":321.14},{"data":"19/07","dia":"Dom","meta":4968.26,"real":3566.01,"forecast":null,"is_real":true,"salao":1275.0,"ifood":2067.0,"food99":98.0,"cum_real":86491.5,"cum_fore":null,"keeta":126.01},{"data":"21/07","dia":"Ter","meta":2394.43,"real":2575.0,"forecast":null,"is_real":true,"salao":596.0,"ifood":1558.0,"food99":421.0,"cum_real":89066.5,"cum_fore":null,"keeta":0},{"data":"22/07","dia":"Qua","meta":3831.08,"real":4241.03,"forecast":null,"is_real":true,"salao":2160.5,"ifood":1674.0,"food99":307.0,"cum_real":93307.53,"cum_fore":null,"keeta":99.53},{"data":"23/07","dia":"Qui","meta":4579.6,"real":4446.08,"forecast":null,"is_real":true,"salao":2527.0,"ifood":1609.0,"food99":169.0,"cum_real":97753.61,"cum_fore":null,"keeta":141.08},{"data":"24/07","dia":"Sex","meta":7419.51,"real":6968.08,"forecast":null,"is_real":true,"salao":3152.0,"ifood":3257.0,"food99":231.0,"cum_real":104721.69,"cum_fore":null,"keeta":328.08},{"data":"25/07","dia":"Sáb","meta":5146.58,"real":4542.28,"forecast":null,"is_real":true,"salao":2241.0,"ifood":2073.01,"food99":63.0,"cum_real":109263.97,"cum_fore":null,"keeta":165.27},{"data":"26/07","dia":"Dom","meta":4968.26,"real":3933.96,"forecast":null,"is_real":true,"salao":1580.0,"ifood":1755.0,"food99":289.0,"cum_real":113197.93,"cum_fore":null,"keeta":309.96},{"data":"28/07","dia":"Ter","meta":2394.43,"real":2410.8,"forecast":null,"is_real":true,"salao":765.0,"ifood":1361.0,"food99":137.0,"cum_real":115608.73,"cum_fore":null,"keeta":147.8},{"data":"29/07","dia":"Qua","meta":3831.08,"real":3082.33,"forecast":null,"is_real":true,"salao":1629.0,"ifood":947.0,"food99":386.0,"cum_real":118691.06,"cum_fore":null,"keeta":120.33},{"data":"30/07","dia":"Qui","meta":4579.6,"real":4171.8,"forecast":null,"is_real":true,"salao":2465.8,"ifood":1215.0,"food99":491.0,"cum_real":122862.86,"cum_fore":null,"keeta":0.0},{"data":"31/07","dia":"Sex","meta":7419.51,"real":7652.3,"forecast":null,"is_real":true,"salao":4740.3,"ifood":2740.0,"food99":172.0,"keeta":0,"cum_real":130515.16,"cum_fore":null}]},"2026-08":{"dias":[{"data":"01/08","dia":"Sáb","meta":6054.05,"real":5426.01,"forecast":null,"is_real":true,"salao":2235.0,"ifood":2901.01,"food99":291.0,"cum_real":5427.01,"cum_fore":null,"keeta":0},{"data":"02/08","dia":"Dom","meta":6501.53,"real":5689.0,"forecast":null,"is_real":true,"salao":1784.0,"ifood":3496.0,"food99":409.0,"cum_real":11116.01,"cum_fore":null,"keeta":0},{"data":"04/08","dia":"Ter","meta":2718.44,"real":2463.0,"forecast":null,"is_real":true,"salao":820.0,"ifood":1508.0,"food99":135.0,"cum_real":13579.01,"cum_fore":null,"keeta":0},{"data":"05/08","dia":"Qua","meta":5175.87,"real":5129.0,"forecast":null,"is_real":true,"salao":3308.0,"ifood":1610.0,"food99":91.0,"keeta":120.0,"cum_real":18708.01,"cum_fore":null},{"data":"06/08","dia":"Qui","meta":5623.35,"real":5483.8,"forecast":null,"is_real":true,"salao":2567.8,"ifood":2107.0,"food99":401.0,"keeta":408.0,"cum_real":24191.81,"cum_fore":null},{"data":"07/08","dia":"Sex","meta":11339.93,"real":9748.1,"forecast":null,"is_real":true,"salao":4281.1,"ifood":4074.0,"food99":850.0,"keeta":477.0,"cum_real":33939.81,"cum_fore":null},{"data":"08/08","dia":"Sáb","meta":6054.05,"real":7286.02,"forecast":null,"is_real":true,"salao":4094.0,"ifood":2488.02,"food99":287.0,"keeta":533.87,"cum_real":41225.81,"cum_fore":null},{"data":"09/08","dia":"Dom","meta":6501.53,"real":3703.5,"forecast":null,"is_real":true,"salao":2371.5,"ifood":800.0,"food99":0.0,"keeta":532.0,"cum_real":44929.31,"cum_fore":null},{"data":"11/08","dia":"Ter","meta":2718.44,"real":2161.0,"forecast":null,"is_real":true,"salao":319.0,"ifood":1247.0,"food99":105.0,"cum_real":47090.31,"cum_fore":null,"keeta":490.0},{"data":"12/08","dia":"Qua","meta":5175.87,"real":4721.01,"forecast":null,"is_real":true,"salao":2682.0,"ifood":1548.01,"food99":248.0,"cum_real":51811.32,"cum_fore":null,"keeta":243.0},{"data":"13/08","dia":"Qui","meta":5623.35,"real":5367.6,"forecast":null,"is_real":true,"salao":2754.6,"ifood":1500.0,"food99":752.0,"cum_real":57063.92,"cum_fore":null},{"data":"14/08","dia":"Sex","meta":11339.93,"real":10320.8,"forecast":null,"is_real":true,"salao":4799.8,"ifood":4471.0,"food99":464.0,"keeta":586.0,"cum_real":67384.72,"cum_fore":null},{"data":"15/08","dia":"Sáb","meta":6054.05,"real":7898.0,"forecast":null,"is_real":true,"salao":3680.0,"ifood":3767.0,"food99":92.0,"keeta":359.0,"cum_real":75282.72,"cum_fore":null},{"data":"16/08","dia":"Dom","meta":6501.53,"real":4015.0,"forecast":null,"is_real":true,"salao":1940.0,"ifood":1177.0,"food99":389.0,"keeta":509.0,"cum_real":79297.72,"cum_fore":null},{"data":"18/08","dia":"Ter","meta":2718.44,"real":1776.0,"forecast":null,"is_real":true,"salao":740.0,"ifood":347.0,"food99":463.0,"cum_real":81073.72,"cum_fore":null,"keeta":226.0},{"data":"19/08","dia":"Qua","meta":5175.87,"real":4202.9,"forecast":null,"is_real":true,"salao":2809.9,"ifood":669.0,"food99":368.0,"cum_real":85276.62,"cum_fore":null,"keeta":356.0},{"data":"20/08","dia":"Qui","meta":5623.35,"real":5206.9,"forecast":null,"is_real":true,"salao":3317.9,"ifood":849.0,"food99":107.0,"cum_real":90300.52,"cum_fore":null,"keeta":750.0},{"data":"21/08","dia":"Sex","meta":11339.93,"real":10775.7,"forecast":null,"is_real":true,"salao":4030.7,"ifood":5710.0,"food99":340.0,"cum_real":101076.22,"cum_fore":null,"keeta":695.0},{"data":"22/08","dia":"Sáb","meta":6054.05,"real":6071.0,"forecast":null,"is_real":true,"salao":2437.0,"ifood":2939.0,"food99":169.0,"cum_real":107147.22,"cum_fore":null,"keeta":526.0},{"data":"23/08","dia":"Dom","meta":6501.53,"real":5317.0,"forecast":null,"is_real":true,"salao":1548.0,"ifood":2528.0,"food99":244.0,"cum_real":112464.22,"cum_fore":null,"keeta":997.0},{"data":"25/08","dia":"Ter","meta":2718.44,"real":2198.0,"forecast":null,"is_real":true,"salao":594.0,"ifood":1031.0,"food99":331.0,"keeta":242.0,"cum_real":114662.22,"cum_fore":null},{"data":"26/08","dia":"Qua","meta":5175.87,"real":4869.0,"forecast":null,"is_real":true,"salao":2616.0,"ifood":1954.0,"food99":299.0,"keeta":0,"cum_real":119531.22,"cum_fore":null},{"data":"27/08","dia":"Qui","meta":5623.35,"real":6017.0,"forecast":null,"is_real":true,"salao":3331.0,"ifood":1524.0,"food99":707.0,"keeta":455.0,"cum_real":125548.22,"cum_fore":null},{"data":"28/08","dia":"Sex","meta":11339.93,"real":10243.0,"forecast":null,"is_real":true,"salao":5643.0,"ifood":3424.0,"food99":215.0,"keeta":960.9,"cum_real":135791.12,"cum_fore":null},{"data":"29/08","dia":"Sáb","meta":6054.05,"real":7285.0,"forecast":null,"is_real":true,"salao":3752.0,"ifood":2469.0,"food99":382.0,"keeta":681.6,"cum_real":143075.72,"cum_fore":null},{"data":"30/08","dia":"Dom","meta":6501.53,"real":6893.0,"forecast":null,"is_real":true,"salao":1792.0,"ifood":4020.0,"food99":909.0,"keeta":332.08,"cum_real":150128.8,"cum_fore":null}]},"2026-09":{"dias":[{"data":"01/09","dia":"Ter","meta":2663.31,"real":2309.77,"forecast":null,"is_real":true,"salao":435.0,"ifood":668.0,"food99":256.78,"keeta":949.99,"cum_real":2309.77,"cum_fore":null},{"data":"02/09","dia":"Qua","meta":5004.56,"real":4952.23,"forecast":null,"is_real":true,"salao":2993.2,"ifood":1492.03,"food99":182.77,"keeta":284.23,"cum_real":7262.0,"cum_fore":null},{"data":"03/09","dia":"Qui","meta":5439.59,"real":5837.63,"forecast":null,"is_real":true,"salao":3800.63,"ifood":1776.36,"food99":44.19,"keeta":216.45,"cum_real":13099.63,"cum_fore":null},{"data":"04/09","dia":"Sex","meta":10935.68,"real":11350.47,"forecast":null,"is_real":true,"salao":4216.86,"ifood":5411.32,"food99":797.33,"keeta":924.96,"cum_real":24450.1,"cum_fore":null},{"data":"05/09","dia":"Sáb","meta":5848.07,"real":6023.11,"forecast":null,"is_real":true,"salao":2067.79,"ifood":3021.37,"food99":360.28,"keeta":573.67,"cum_real":30473.21,"cum_fore":null},{"data":"06/09","dia":"Dom","meta":6283.1,"real":3642.54,"forecast":null,"is_real":true,"salao":1149.07,"ifood":1899.91,"food99":442.27,"keeta":151.29,"cum_real":34115.75,"cum_fore":null},{"data":"08/09","dia":"Ter","meta":2663.31,"real":1820.45,"forecast":null,"is_real":true,"salao":null,"ifood":null,"food99":null,"keeta":null,"cum_real":35936.2,"cum_fore":null},{"data":"09/09","dia":"Qua","meta":5004.56,"real":3213.49,"forecast":null,"is_real":true,"salao":null,"ifood":null,"food99":null,"keeta":null,"cum_real":39149.69,"cum_fore":null},{"data":"10/09","dia":"Qui","meta":5439.59,"real":3279.92,"forecast":null,"is_real":true,"salao":null,"ifood":null,"food99":null,"keeta":null,"cum_real":42429.61,"cum_fore":null},{"data":"11/09","dia":"Sex","meta":10935.68,"real":11290.9,"forecast":null,"is_real":true,"salao":null,"ifood":null,"food99":null,"keeta":null,"cum_real":53720.51,"cum_fore":null},{"data":"12/09","dia":"Sáb","meta":5848.07,"real":5885.6,"forecast":null,"is_real":true,"salao":null,"ifood":null,"food99":null,"keeta":null,"cum_real":59606.11,"cum_fore":null},{"data":"13/09","dia":"Dom","meta":6283.1,"real":5681.31,"forecast":null,"is_real":true,"salao":null,"ifood":null,"food99":null,"keeta":null,"cum_real":65287.42,"cum_fore":null},{"data":"15/09","dia":"Ter","meta":2663.31,"real":4118.64,"forecast":null,"is_real":true,"salao":1900.93,"ifood":1363.71,"food99":78.95,"keeta":775.05,"cum_real":69406.06,"cum_fore":null},{"data":"16/09","dia":"Qua","meta":5004.56,"real":2431.54,"forecast":null,"is_real":true,"salao":1244.21,"ifood":1013.74,"food99":48.27,"keeta":125.32,"cum_real":71837.60,"cum_fore":null},{"data":"17/09","dia":"Qui","meta":5439.59,"real":4349.05,"forecast":null,"is_real":true,"salao":2378.03,"ifood":1213.79,"food99":130.28,"keeta":626.95,"cum_real":76186.65,"cum_fore":null},{"data":"18/09","dia":"Sex","meta":10935.68,"real":10401.57,"forecast":null,"is_real":true,"salao":4847.43,"ifood":3439.37,"food99":790.17,"keeta":1324.60,"cum_real":86588.22,"cum_fore":null},{"data":"19/09","dia":"Sáb","meta":5848.07,"real":8129.92,"forecast":null,"is_real":true,"salao":3332.00,"ifood":3702.38,"food99":160.81,"keeta":934.73,"cum_real":94718.14,"cum_fore":null},{"data":"20/09","dia":"Dom","meta":6283.1,"real":5716.32,"forecast":null,"is_real":true,"salao":1750.04,"ifood":2569.10,"food99":340.09,"keeta":1057.09,"cum_real":100434.46,"cum_fore":null},{"data":"22/09","dia":"Ter","meta":2663.31,"real":3296.83,"forecast":null,"is_real":true,"salao":1498.12,"ifood":937.42,"food99":228.05,"keeta":633.24,"cum_real":103731.29,"cum_fore":null},{"data":"23/09","dia":"Qua","meta":5004.56,"real":6377.75,"forecast":null,"is_real":true,"salao":3785.20,"ifood":2071.00,"food99":304.33,"keeta":217.22,"cum_real":110109.04,"cum_fore":null},{"data":"24/09","dia":"Qui","meta":5439.59,"real":7493.96,"forecast":null,"is_real":true,"salao":3466.0,"ifood":3587.25,"food99":49.29,"keeta":391.42,"cum_real":117603.0,"cum_fore":null},{"data":"25/09","dia":"Sex","meta":10935.68,"real":11966.37,"forecast":null,"is_real":true,"salao":7104.81,"ifood":3094.33,"food99":850.75,"keeta":916.48,"cum_real":129569.37,"cum_fore":null},{"data":"26/09","dia":"Sáb","meta":5848.07,"real":8242.38,"forecast":null,"is_real":true,"salao":4014.85,"ifood":2895.65,"food99":480.02,"keeta":851.86,"cum_real":137811.75,"cum_fore":null},{"data":"27/09","dia":"Dom","meta":6283.1,"real":6691.59,"forecast":null,"is_real":true,"salao":1686.87,"ifood":3207.12,"food99":556.17,"keeta":1241.43,"cum_real":144503.34,"cum_fore":null},{"data":"29/09","dia":"Ter","meta":2663.31,"real":null,"forecast":2663.31,"is_real":false,"salao":null,"ifood":null,"food99":null,"keeta":null,"cum_real":null,"cum_fore":146333.28},{"data":"30/09","dia":"Qua","meta":5004.56,"real":null,"forecast":5004.56,"is_real":false,"salao":null,"ifood":null,"food99":null,"keeta":null,"cum_real":null,"cum_fore":149882.51}]}};
+const FORECAST_BY_MONTH = {"2026-06":{"dias":[{"data":"02/06","dia":"Ter","meta":2542.76,"real":1865.0,"forecast":null,"is_real":true,"salao":688.0,"ifood":1177.0,"food99":0.0},{"data":"03/06","dia":"Qua","meta":4950.72,"real":8749.6,"forecast":null,"is_real":true,"salao":4201.6,"ifood":4548.0,"food99":0.0},{"data":"04/06","dia":"Qui","meta":5917.99,"real":5826.0,"forecast":null,"is_real":true,"salao":3621.0,"ifood":2205.0,"food99":0.0},{"data":"05/06","dia":"Sex","meta":9587.87,"real":4129.0,"forecast":null,"is_real":true,"salao":1964.0,"ifood":2165.0,"food99":0.0},{"data":"06/06","dia":"Sáb","meta":6650.68,"real":4057.0,"forecast":null,"is_real":true,"salao":2169.0,"ifood":1888.0,"food99":0.0},{"data":"07/06","dia":"Dom","meta":6420.24,"real":5094.8,"forecast":null,"is_real":true,"salao":2040.8,"ifood":3054.0,"food99":0.0},{"data":"09/06","dia":"Ter","meta":2542.76,"real":2712.0,"forecast":null,"is_real":true,"salao":1286.0,"ifood":1369.0,"food99":57.0},{"data":"10/06","dia":"Qua","meta":4950.72,"real":5042.8,"forecast":null,"is_real":true,"salao":2695.8,"ifood":2066.0,"food99":281.0},{"data":"11/06","dia":"Qui","meta":5917.99,"real":4805.0,"forecast":null,"is_real":true,"salao":2120.0,"ifood":2595.0,"food99":90.0},{"data":"12/06","dia":"Sex","meta":9587.87,"real":8997.4,"forecast":null,"is_real":true,"salao":4666.4,"ifood":4272.0,"food99":59.0},{"data":"13/06","dia":"Sáb","meta":6650.68,"real":5446.4,"forecast":null,"is_real":true,"salao":3105.4,"ifood":2203.0,"food99":138.0},{"data":"14/06","dia":"Dom","meta":6420.24,"real":7279.2,"forecast":null,"is_real":true,"salao":2005.2,"ifood":4741.0,"food99":533.0},{"data":"16/06","dia":"Ter","meta":2542.76,"real":2040.0,"forecast":null,"is_real":true,"salao":582.0,"ifood":1178.0,"food99":280.0},{"data":"17/06","dia":"Qua","meta":4950.72,"real":3390.8,"forecast":null,"is_real":true,"salao":2110.8,"ifood":1185.0,"food99":95.0},{"data":"18/06","dia":"Qui","meta":5917.99,"real":4595.2,"forecast":null,"is_real":true,"salao":2338.2,"ifood":1803.0,"food99":454.0},{"data":"19/06","dia":"Sex","meta":9587.87,"real":10114.6,"forecast":null,"is_real":true,"salao":4845.6,"ifood":5189.0,"food99":80.0},{"data":"20/06","dia":"Sáb","meta":6650.68,"real":6533.0,"forecast":null,"is_real":true,"salao":1787.0,"ifood":4027.0,"food99":719.0},{"data":"21/06","dia":"Dom","meta":6420.24,"real":6324.8,"forecast":null,"is_real":true,"salao":2378.8,"ifood":3417.0,"food99":529.0},{"data":"23/06","dia":"Ter","meta":2542.76,"real":2057.0,"forecast":null,"is_real":true,"salao":80.0,"ifood":1586.0,"food99":391.0},{"data":"24/06","dia":"Qua","meta":4950.72,"real":6694.4,"forecast":null,"is_real":true,"salao":2970.4,"ifood":3724.0,"food99":0.0},{"data":"25/06","dia":"Qui","meta":5917.99,"real":4516.0,"forecast":null,"is_real":true,"salao":2987.0,"ifood":1394.0,"food99":135.0},{"data":"26/06","dia":"Sex","meta":9587.87,"real":10472.0,"forecast":null,"is_real":true,"salao":5290.0,"ifood":4815.0,"food99":367.0},{"data":"27/06","dia":"Sáb","meta":6650.68,"real":6056.0,"forecast":null,"is_real":true,"salao":2787.0,"ifood":3042.0,"food99":227.0},{"data":"28/06","dia":"Dom","meta":6420.24,"real":7505.8,"forecast":null,"is_real":true,"salao":4446.8,"ifood":2912.0,"food99":147.0},{"data":"29/06","dia":"Seg","meta":0,"real":0,"forecast":null,"is_real":true,"is_evento":true,"salao":0,"ifood":0,"food99":0},{"data":"30/06","dia":"Ter","meta":2542.76,"real":1722.0,"forecast":null,"is_real":true,"salao":963.0,"ifood":504.0,"food99":255.0}]},"2026-07":{"dias":[{"data":"01/07","dia":"Qua","meta":3831.08,"real":3618.81,"forecast":null,"is_real":true,"salao":2238.8,"ifood":1307.01,"food99":73.0,"cum_real":3618.81,"cum_fore":null,"keeta":0},{"data":"02/07","dia":"Qui","meta":4579.6,"real":5641.8,"forecast":null,"is_real":true,"salao":3471.8,"ifood":2170.0,"food99":0.0,"cum_real":9260.61,"cum_fore":null,"keeta":0},{"data":"03/07","dia":"Sex","meta":7419.51,"real":11256.0,"forecast":null,"is_real":true,"salao":4894.0,"ifood":5801.0,"food99":561.0,"cum_real":20516.61,"cum_fore":null,"keeta":0},{"data":"04/07","dia":"Sáb","meta":5146.58,"real":4455.0,"forecast":null,"is_real":true,"salao":2212.0,"ifood":2144.0,"food99":99.0,"cum_real":24971.61,"cum_fore":null,"keeta":0},{"data":"05/07","dia":"Dom","meta":4968.26,"real":5049.0,"forecast":null,"is_real":true,"salao":2994.0,"ifood":1933.0,"food99":122.0,"cum_real":30020.61,"cum_fore":null,"keeta":0},{"data":"07/07","dia":"Ter","meta":2394.43,"real":1779.0,"forecast":null,"is_real":true,"salao":299.0,"ifood":1162.0,"food99":318.0,"cum_real":31799.61,"cum_fore":null,"keeta":0},{"data":"08/07","dia":"Qua","meta":3831.08,"real":6845.6,"forecast":null,"is_real":true,"salao":4609.9,"ifood":2090.0,"food99":111.0,"keeta":34.7,"cum_real":38645.21,"cum_fore":null},{"data":"09/07","dia":"Qui","meta":4579.6,"real":5969.55,"forecast":null,"is_real":true,"salao":2849.0,"ifood":2561.0,"food99":404.0,"keeta":155.55,"cum_real":44614.76,"cum_fore":null},{"data":"10/07","dia":"Sex","meta":7419.51,"real":4421.25,"forecast":null,"is_real":true,"salao":1815.0,"ifood":2309.0,"food99":235.0,"keeta":62.25,"cum_real":49036.01,"cum_fore":null},{"data":"11/07","dia":"Sáb","meta":5146.58,"real":4058.7,"forecast":null,"is_real":true,"salao":2512.0,"ifood":1309.0,"food99":206.0,"keeta":31.7,"cum_real":53094.71,"cum_fore":null},{"data":"12/07","dia":"Dom","meta":4968.26,"real":5523.81,"forecast":null,"is_real":true,"salao":1492.8,"ifood":3219.0,"food99":473.0,"keeta":339.01,"cum_real":58618.52,"cum_fore":null},{"data":"14/07","dia":"Ter","meta":2394.43,"real":1479.0,"forecast":null,"is_real":true,"salao":305.0,"ifood":788.0,"food99":386.0,"cum_real":60097.52,"cum_fore":null,"keeta":0},{"data":"15/07","dia":"Qua","meta":3831.08,"real":3410.18,"forecast":null,"is_real":true,"salao":2457.0,"ifood":778.0,"food99":140.0,"cum_real":63507.7,"cum_fore":null,"keeta":35.18},{"data":"16/07","dia":"Qui","meta":4579.6,"real":5952.72,"forecast":null,"is_real":true,"salao":2894.2,"ifood":2426.0,"food99":490.0,"cum_real":69460.42,"cum_fore":null,"keeta":142.52},{"data":"17/07","dia":"Sex","meta":7419.51,"real":7318.92,"forecast":null,"is_real":true,"salao":3760.0,"ifood":3465.0,"food99":0.0,"cum_real":76779.34,"cum_fore":null,"keeta":93.92},{"data":"18/07","dia":"Sáb","meta":5146.58,"real":6146.15,"forecast":null,"is_real":true,"salao":2174.0,"ifood":2840.01,"food99":811.0,"cum_real":82925.49,"cum_fore":null,"keeta":321.14},{"data":"19/07","dia":"Dom","meta":4968.26,"real":3566.01,"forecast":null,"is_real":true,"salao":1275.0,"ifood":2067.0,"food99":98.0,"cum_real":86491.5,"cum_fore":null,"keeta":126.01},{"data":"21/07","dia":"Ter","meta":2394.43,"real":2575.0,"forecast":null,"is_real":true,"salao":596.0,"ifood":1558.0,"food99":421.0,"cum_real":89066.5,"cum_fore":null,"keeta":0},{"data":"22/07","dia":"Qua","meta":3831.08,"real":4241.03,"forecast":null,"is_real":true,"salao":2160.5,"ifood":1674.0,"food99":307.0,"cum_real":93307.53,"cum_fore":null,"keeta":99.53},{"data":"23/07","dia":"Qui","meta":4579.6,"real":4446.08,"forecast":null,"is_real":true,"salao":2527.0,"ifood":1609.0,"food99":169.0,"cum_real":97753.61,"cum_fore":null,"keeta":141.08},{"data":"24/07","dia":"Sex","meta":7419.51,"real":6968.08,"forecast":null,"is_real":true,"salao":3152.0,"ifood":3257.0,"food99":231.0,"cum_real":104721.69,"cum_fore":null,"keeta":328.08},{"data":"25/07","dia":"Sáb","meta":5146.58,"real":4542.28,"forecast":null,"is_real":true,"salao":2241.0,"ifood":2073.01,"food99":63.0,"cum_real":109263.97,"cum_fore":null,"keeta":165.27},{"data":"26/07","dia":"Dom","meta":4968.26,"real":3933.96,"forecast":null,"is_real":true,"salao":1580.0,"ifood":1755.0,"food99":289.0,"cum_real":113197.93,"cum_fore":null,"keeta":309.96},{"data":"28/07","dia":"Ter","meta":2394.43,"real":2410.8,"forecast":null,"is_real":true,"salao":765.0,"ifood":1361.0,"food99":137.0,"cum_real":115608.73,"cum_fore":null,"keeta":147.8},{"data":"29/07","dia":"Qua","meta":3831.08,"real":3082.33,"forecast":null,"is_real":true,"salao":1629.0,"ifood":947.0,"food99":386.0,"cum_real":118691.06,"cum_fore":null,"keeta":120.33},{"data":"30/07","dia":"Qui","meta":4579.6,"real":4171.8,"forecast":null,"is_real":true,"salao":2465.8,"ifood":1215.0,"food99":491.0,"cum_real":122862.86,"cum_fore":null,"keeta":0.0},{"data":"31/07","dia":"Sex","meta":7419.51,"real":7652.3,"forecast":null,"is_real":true,"salao":4740.3,"ifood":2740.0,"food99":172.0,"keeta":0,"cum_real":130515.16,"cum_fore":null}]},"2026-08":{"dias":[{"data":"01/08","dia":"Sáb","meta":6054.05,"real":5427.01,"forecast":null,"is_real":true,"salao":2235.0,"ifood":2901.01,"food99":291.0,"cum_real":5427.01,"cum_fore":null,"keeta":0},{"data":"02/08","dia":"Dom","meta":6501.53,"real":5440.0,"forecast":null,"is_real":true,"salao":1784.0,"ifood":3247.0,"food99":409.0,"cum_real":10867.01,"cum_fore":null,"keeta":0},{"data":"04/08","dia":"Ter","meta":2718.44,"real":2463.0,"forecast":null,"is_real":true,"salao":820.0,"ifood":1508.0,"food99":135.0,"cum_real":13330.01,"cum_fore":null,"keeta":0},{"data":"05/08","dia":"Qua","meta":5175.87,"real":5129.0,"forecast":null,"is_real":true,"salao":3308.0,"ifood":1610.0,"food99":91.0,"keeta":120.0,"cum_real":18459.01,"cum_fore":null},{"data":"06/08","dia":"Qui","meta":5623.35,"real":5483.8,"forecast":null,"is_real":true,"salao":2567.8,"ifood":2107.0,"food99":401.0,"keeta":408.0,"cum_real":23942.81,"cum_fore":null},{"data":"07/08","dia":"Sex","meta":11339.93,"real":9682.1,"forecast":null,"is_real":true,"salao":4281.1,"ifood":4074.0,"food99":850.0,"keeta":477.0,"cum_real":33624.91,"cum_fore":null},{"data":"08/08","dia":"Sáb","meta":6054.05,"real":7402.89,"forecast":null,"is_real":true,"salao":4094.0,"ifood":2488.02,"food99":287.0,"keeta":533.87,"cum_real":41027.8,"cum_fore":null},{"data":"09/08","dia":"Dom","meta":6501.53,"real":3703.5,"forecast":null,"is_real":true,"salao":2371.5,"ifood":800.0,"food99":0.0,"keeta":532.0,"cum_real":44731.3,"cum_fore":null},{"data":"11/08","dia":"Ter","meta":2718.44,"real":2161.0,"forecast":null,"is_real":true,"salao":319.0,"ifood":1247.0,"food99":105.0,"cum_real":46892.3,"cum_fore":null,"keeta":490.0},{"data":"12/08","dia":"Qua","meta":5175.87,"real":4721.01,"forecast":null,"is_real":true,"salao":2682.0,"ifood":1548.01,"food99":248.0,"cum_real":51613.31,"cum_fore":null,"keeta":243.0},{"data":"13/08","dia":"Qui","meta":5623.35,"real":null,"forecast":3942.84,"is_real":false,"salao":2584.22,"ifood":2695.71,"food99":343.42,"cum_real":null,"cum_fore":55556.15},{"data":"14/08","dia":"Sex","meta":11339.93,"real":null,"forecast":7951.05,"is_real":false,"salao":6173.41,"ifood":4582.7,"food99":583.82,"cum_real":null,"cum_fore":63507.2},{"data":"15/08","dia":"Sáb","meta":6054.05,"real":null,"forecast":4244.83,"is_real":false,"salao":3014.92,"ifood":2695.71,"food99":343.42,"cum_real":null,"cum_fore":67752.03},{"data":"16/08","dia":"Dom","meta":6501.53,"real":null,"forecast":4558.58,"is_real":false,"salao":3158.49,"ifood":2965.28,"food99":377.76,"cum_real":null,"cum_fore":72310.61},{"data":"18/08","dia":"Ter","meta":2718.44,"real":null,"forecast":1906.05,"is_real":false,"salao":287.14,"ifood":2156.56,"food99":274.74,"cum_real":null,"cum_fore":74216.66},{"data":"19/08","dia":"Qua","meta":5175.87,"real":null,"forecast":3629.09,"is_real":false,"salao":2440.65,"ifood":2426.14,"food99":309.08,"cum_real":null,"cum_fore":77845.75},{"data":"20/08","dia":"Qui","meta":5623.35,"real":null,"forecast":3942.84,"is_real":false,"salao":2584.22,"ifood":2695.71,"food99":343.42,"cum_real":null,"cum_fore":81788.59},{"data":"21/08","dia":"Sex","meta":11339.93,"real":null,"forecast":7951.05,"is_real":false,"salao":6173.41,"ifood":4582.7,"food99":583.82,"cum_real":null,"cum_fore":89739.64},{"data":"22/08","dia":"Sáb","meta":6054.05,"real":null,"forecast":4244.83,"is_real":false,"salao":3014.92,"ifood":2695.71,"food99":343.42,"cum_real":null,"cum_fore":93984.47},{"data":"23/08","dia":"Dom","meta":6501.53,"real":null,"forecast":4558.58,"is_real":false,"salao":3158.49,"ifood":2965.28,"food99":377.76,"cum_real":null,"cum_fore":98543.05},{"data":"25/08","dia":"Ter","meta":2718.44,"real":null,"forecast":1906.05,"is_real":false,"salao":287.14,"ifood":2156.56,"food99":274.74,"cum_real":null,"cum_fore":100449.1},{"data":"26/08","dia":"Qua","meta":5175.87,"real":null,"forecast":3629.09,"is_real":false,"salao":2440.65,"ifood":2426.14,"food99":309.08,"cum_real":null,"cum_fore":104078.19},{"data":"27/08","dia":"Qui","meta":5623.35,"real":null,"forecast":3942.84,"is_real":false,"salao":2584.22,"ifood":2695.71,"food99":343.42,"cum_real":null,"cum_fore":108021.03},{"data":"28/08","dia":"Sex","meta":11339.93,"real":null,"forecast":7951.05,"is_real":false,"salao":6173.41,"ifood":4582.7,"food99":583.82,"cum_real":null,"cum_fore":115972.08},{"data":"29/08","dia":"Sáb","meta":6054.05,"real":null,"forecast":4244.83,"is_real":false,"salao":3014.92,"ifood":2695.71,"food99":343.42,"cum_real":null,"cum_fore":120216.91},{"data":"30/08","dia":"Dom","meta":6501.53,"real":null,"forecast":4558.58,"is_real":false,"salao":3158.49,"ifood":2965.28,"food99":377.76,"cum_real":null,"cum_fore":124775.49}]}};
 // ===DASH-FORECAST-DATA-END===
 
 const JUNE_PROJETADO_LOJA = 132935.59; // projetado loja Jun/26 (externo)
@@ -8019,10 +7873,11 @@ function renderForecast() {
   const gapStretch    = round2(totalProj - metaStretch);  // sempre negativo (meta > proj)
   const pctStretch    = totalProj > 0 ? ((totalProj / metaStretch) * 100) : 0;
   const kpis = [
-    { label: 'Meta do Mês', val: 'R$ ' + fmt(metaTotal), sub: _monLabel,                                                                                  color: 'var(--accent)' },
+    { label: 'Forecast do Mês', val: 'R$ ' + fmt(metaTotal), sub: _monLabel,                                                                                  color: 'var(--accent)' },
     { label: 'Real Acumulado',  val: 'R$ ' + fmt(totalReal), sub: totalReal > 0 ? (pctReal).toFixed(1) + '% do forecast' : '—',                              color: '#4cc9f0' },
     { label: 'Projeção Final',  val: totalReal > 0 ? 'R$ ' + fmt(totalProj) : '—', sub: totalReal > 0 ? (pctProj).toFixed(1) + '% do forecast' : 'sem real ainda', color: '#06d6a0' },
-    { label: 'Real vs Meta (acum.)', val: (gap >= 0 ? '+' : '') + 'R$ ' + fmt(Math.abs(gap)), sub: (gap >= 0 ? '▲ ' : '▼ ') + Math.abs(gap / (lastCumMeta||1) * 100).toFixed(1) + '% ' + (gap >= 0 ? 'acima' : 'abaixo') + ' da meta até hoje',  color: gap >= 0 ? '#22c55e' : '#ef4444' }
+    { label: 'Real vs Meta (acum.)', val: (gap >= 0 ? '+' : '') + 'R$ ' + fmt(Math.abs(gap)), sub: (gap >= 0 ? '▲ ' : '▼ ') + Math.abs(gap / (lastCumMeta||1) * 100).toFixed(1) + '% ' + (gap >= 0 ? 'acima' : 'abaixo') + ' da meta até hoje',  color: gap >= 0 ? '#22c55e' : '#ef4444' },
+    { label: 'Meta',             val: 'R$ ' + fmt(metaStretch), sub: totalReal > 0 ? pctStretch.toFixed(1) + '% da meta atingida' : 'meta do mês',        color: pctStretch >= 100 ? '#22c55e' : '#f59e0b' }
   ];
   const kpiEl = document.getElementById('forecast-kpis');
   kpiEl.innerHTML = kpis.map(k => `
@@ -8059,8 +7914,7 @@ function renderForecast() {
     if (_ch === 'ifood')  return round2(d.ifood  || 0);
     if (_ch === 'food99') return round2(d.food99 || 0);
     if (_ch === 'keeta')  return round2(d.keeta  || 0);
-    const _chs = (d.salao||0)+(d.ifood||0)+(d.food99||0)+(d.keeta||0);
-    return round2(_chs > 0 ? _chs : (d.real || 0));
+    return round2((d.salao || 0) + (d.ifood || 0) + (d.food99 || 0) + (d.keeta || 0));
   });
 
   // Per-channel meta line: prorated by that channel's share of the day's total
@@ -8257,7 +8111,7 @@ function checkChannelCompleteness(yr) {
   for (const canal in CANAIS) {
     const comValor = allDates.filter(d => {
       const e = daily[d]; if (!e) return false;
-      return (e[canal] || 0) > 0 || (canal in e) || (e.channels_verified || []).includes(canal);
+      return (e[canal] || 0) > 0 || (e.channels_verified || []).includes(canal);
     }).sort((a, b) => parseDate(b) - parseDate(a));
     const lastCanal = comValor[0] || null;
     if (!lastCanal || parseDate(lastCanal) < parseDate(lastOverall)) {
@@ -8420,7 +8274,7 @@ function renderCT() {
 
     allMon.forEach(m => {
       const d = rm[m] || {};
-      const _julForeC = (year === '2026' && m === '07') ? getJulyForecast2026() : (year === '2026' && m === '09') ? getSeptemberForecast2026() : null;
+      const _julForeC = (year === '2026' && m === '07') ? getJulyForecast2026() : null;
       const tot = _julForeC ? _julForeC.total : (d.salao_val||0) + (d.ifood_val||0) + (d.food99_val||0);
       const regCups = (year === '2026' && m === '07') ? 1400 : (d.coupons || 0);
       const evCups  = ctShowEvent ? (d.evento_cups || 0) : 0;
@@ -8586,7 +8440,7 @@ function displayCat(cat, name, platform) {
   }
   if (cat === 'Burger' || cat === 'Hot Dog') return 'Burger';
   if (cat === 'Fritas' || cat === 'Porções') return 'Entradas';
-  if (cat === 'Bebidas') { const _n = (name||'').toLowerCase(); if (_n.includes('milk shake') || _n.includes('milkshake')) return 'Sobremesas'; return 'Bebidas'; }
+  if (cat === 'Bebidas') return 'Bebidas';
   if (cat === 'Cervejas') return 'Cervejas';
   if (cat === 'Sobremesas') return 'Sobremesas';
   if (cat === 'Combo') return 'Burger';
@@ -8921,9 +8775,8 @@ function renderMixAuv() {
     if (plataforma === 'familia') {
       if (!isPromo || !n.includes('4 por')) return false;
       if (n.includes('salão') || n.includes('salao')) return false;
-      const is140fam = n.includes('140') || n.includes('119');
-      if (tamanho === '100g' && is140fam) return false;
-      if (tamanho === '140g' && !is140fam) return false;
+      if (tamanho === '100g' && n.includes('140')) return false;
+      if (tamanho === '140g' && !n.includes('140')) return false;
       return true;
     }
     if (plataforma === '2x1') {
@@ -9026,7 +8879,7 @@ function renderMixAuv() {
       return { Burger: { [sub]: 2 } };
     }
     if (n.includes('4 por') || n.includes('4por')) {
-      const sub = (n.includes('140') || n.includes('119')) ? '140g' : '100g & Chicken';
+      const sub = n.includes('140') ? '140g' : '100g & Chicken';
       return { Burger: { [sub]: 4 } };
     }
     return null;
@@ -9036,17 +8889,7 @@ function renderMixAuv() {
   const opCur  = ALL_MN.map(m => rmCur[m]?.op_days || 0);
   const op25   = ALL_MN.map(m => rm25[m]?.op_days  || 0);
   const dimCur = ALL_MN.map((m, i) => {
-    const fullDays = new Date(parseInt(activeYear), parseInt(m), 0).getDate();
-    // Mês vigente: divide pelo último dia com dado real (ex: 17 em vez de 30)
-    const now = new Date();
-    const curMon = String(now.getMonth() + 1).padStart(2, '0');
-    if (activeYear === String(now.getFullYear()) && m === curMon) {
-      const dc = getDailyData();
-      const suffix = '/' + m + '/' + activeYear;
-      const days = Object.keys(dc).filter(d => d.endsWith(suffix)).map(d => parseInt(d.split('/')[0]));
-      if (days.length > 0) return Math.max(...days);
-    }
-    return fullDays;
+    return new Date(parseInt(activeYear), parseInt(m), 0).getDate();
   });
   const dim25  = ALL_MN.map(m => new Date(2025, parseInt(m), 0).getDate());
 
@@ -9068,7 +8911,7 @@ function renderMixAuv() {
   const bebidasSubcat  = name => { const n = name.toLowerCase(); if (n.includes('água') || n.includes('agua') || n === 'h2o') return 'Água'; if (n.includes('fire fresh')) return 'Fire Fresh'; if (n.includes('milk shake') || n.includes('milkshake')) return 'Milk Shake'; return 'Refri'; };
   const cervejasSubcat = name => { const n = name.toLowerCase(); if (n.includes('ipa') || n === 'lager fire' || (n.includes('lager') && n.includes('fire')) || n === 'ipa fire') return 'Cerveja Fire'; return 'Outras'; };
   const promoSubcat    = name => { const n = name.toLowerCase(); if (n.includes('2x1') || n.includes('2 x 1')) return '2x1'; if (name.includes('4 por R$99')) return '4 por R$99'; if (name.includes('4 por R$119')) return '4 por R$119'; if (name.includes('100g')) return 'Combo 100g'; if (name.includes('140g')) return 'Combo 140g'; return name; };
-  const sobSubcat      = name => { const _n = name.toLowerCase(); if (_n.includes('milk shake') || _n.includes('milkshake')) return 'Milk Shake'; return name.includes('Pudim') ? 'Pudim' : 'Brownie'; };
+  const sobSubcat      = name => name.includes('Pudim') ? 'Pudim' : 'Brownie';
 
   // ── Build monthly totals for a given products set, cat, and classifier ──
   const buildTotals = (prodsObj, catName, classifier, subcats, ratioFn) => {
@@ -9314,140 +9157,44 @@ function renderMixAuv() {
     subColors = Object.fromEntries(AUV_CATS.map(c => [c, CAT_COLORS[c] || '#909090']));
     totCur    = buildAllCatTotals(getProducts(), getChanRatio);
     tot25     = buildAllCatTotals(prods25, getChanRatio);
-    // Correção Burger/Entradas/Bebidas: quantidades reais do ConnectPlug + PivotGrid, com split por canal
+    // Correção Burger: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
     if (activeYear === '2026' && plataforma === 'all') {
-      if (canal === 'all') {
-        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':3085};
-        ALL_MN.forEach(m => {
-          const correct = BURGER_QTY_2026[m];
-          if (correct == null) return;
-          totCur[m]['Burger'] = correct;
-        });
-      }
-      // Entradas: canal separado por mês com dados do PivotGrid; demais apenas total
-      const ENTRADAS_CANAL_2026 = {'07':{all:1333},'08':{all:1304},'09':{all:1374,salao:697,delivery:677}};
+      const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2095};
+      const BURGER_COMPUTED_BASE = {'01':2326,'02':2633,'03':3369,'04':2856,'05':3081,'06':2709,'07':2299};
       ALL_MN.forEach(m => {
-        const cq = ENTRADAS_CANAL_2026[m]; if (!cq) return;
-        if (canal !== 'all' && cq.salao == null) return;
-        totCur[m]['Entradas'] = canal === 'salao' ? cq.salao : canal === 'delivery' ? (cq.delivery??0) : cq.all;
+        const correct = BURGER_QTY_2026[m]; const base = BURGER_COMPUTED_BASE[m];
+        if (correct == null || !base) return;
+        totCur[m]['Burger'] = Math.round((totCur[m]['Burger'] || 0) * correct / base);
       });
-      const SOBREMESAS_QTY_2026 = {'07':155,'08':153,'09':106};
-      ALL_MN.forEach(m => {
-        const correct = SOBREMESAS_QTY_2026[m]; if (correct == null) return;
-        if (canal === 'all') totCur[m]['Sobremesas'] = correct;
-      });
-      // Bebidas: canal separado por mês com dados do PivotGrid
-      const BEBIDAS_CANAL_2026 = {'08':{all:1206},'09':{all:1149,salao:851,delivery:298}};
-      ALL_MN.forEach(m => {
-        const cq = BEBIDAS_CANAL_2026[m]; if (!cq) return;
-        if (canal !== 'all' && cq.salao == null) return;
-        totCur[m]['Bebidas'] = canal === 'salao' ? cq.salao : canal === 'delivery' ? (cq.delivery??0) : cq.all;
-      });
-      // Cervejas: apenas salão (delivery = 0)
-      const CERVEJAS_QTY_2026 = {'08':200,'09':126};
-      ALL_MN.forEach(m => {
-        const correct = CERVEJAS_QTY_2026[m]; if (correct == null) return;
-        totCur[m]['Cervejas'] = canal === 'delivery' ? 0 : correct;
-      });
-    }
-    // A la Carte = total burgers − combo (1 burger cada) − 2x1 (2 cada) − família (4 cada)
-    if (activeYear === '2026' && plataforma === 'a_lacarte' && canal === 'all') {
-      const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':3085};
-      const _CC = {'07':{all:{all:309}},'08':{all:{all:663}},'09':{all:{all:774,salao:512,delivery:262},'100g':{all:260,salao:194,delivery:66},'140g':{all:514,salao:318,delivery:196}}};
-      const _X2 = {'08':{all:{all:138}},'09':{all:{all:68}}};
-      const _FM = {'07':{total:66},'08':{total:79},'09':{total:67}};
-      ALL_MN.forEach(m => {
-        const bq = _BQ[m]; if (bq == null) return;
-        const alacarte = Math.max(0, bq - (_CC[m]?.all?.all??0) - (_X2[m]?.all?.all??0)*2 - (_FM[m]?.total??0)*4);
-        totCur[m]['Burger'] = alacarte;
-      });
-      // Entradas à la carte = total − fritas nos combos (−CB)
-      const _EAL = {'09':695};
-      ALL_MN.forEach(m => { const v = _EAL[m]; if (v != null) totCur[m]['Entradas'] = v; });
-      // Bebidas à la carte = total − bebidas nos combos (−CB)
-      const _BAL = {'09':486};
-      ALL_MN.forEach(m => { const v = _BAL[m]; if (v != null) totCur[m]['Bebidas'] = v; });
     }
   } else if (catFilter === 'Burger') {
     const burgerSub = document.getElementById('mix-auv-burgersub')?.value || 'all';
-    if (burgerSub === 'Hot Dog') {
-      subcats   = ['Fire Dog Classic','X-Dog Bacon','BLT'];
-      subColors = {'Fire Dog Classic':'#8b3a0a','X-Dog Bacon':'#c8691a','BLT':'#e03a0e'};
-      const hotDogBaseName = name => {
-        if (burgerSubcat(name) !== 'Hot Dog') return '_skip_';
-        const n = name.toLowerCase();
-        if (n.includes('x-dog') || n.includes('x dog')) return 'X-Dog Bacon';
-        if (n.includes('classic')) return 'Fire Dog Classic';
-        if (name === 'BLT' || n.includes('blt')) return 'BLT';
-        if (n.includes('dog')) return 'Fire Dog Classic';
-        return '_skip_';
-      };
-      totCur = buildTotals(getProducts(), 'Burger', hotDogBaseName, subcats, getChanRatio);
-      tot25  = buildTotals(prods25, 'Burger', hotDogBaseName, subcats, getChanRatio);
-      if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
-        const _allRaw = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g','Hot Dog'], getChanRatio);
-        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':3085};
-        ALL_MN.forEach(m => {
-          const _c = _BQ[m]; if (!_c) return;
-          const _rt = ['100g & Chicken','140g','Hot Dog'].reduce((s,c) => s + (_allRaw[m][c]||0), 0);
-          if (!_rt) return;
-          const _sc = _c / _rt;
-          subcats.forEach(c => { totCur[m][c] = Math.round((totCur[m][c]||0) * _sc); });
-        });
-      }
-    } else if (burgerSub !== 'all') {
-      // Drill: consolidated por tipo de lanche (100g & Chicken ou 140g)
-      const _is100g = burgerSub === '100g & Chicken';
-      subcats   = _is100g
-        ? ['X-Burger','X-Salada','X-Bacon','Fire Classic','Fire Blue','Fire Relish','Fire Chicken']
-        : ['X-Burger','X-Salada','X-Bacon','Fire Classic','Fire Blue','Fire Relish'];
-      subColors = {
-        'X-Burger':    '#e03a0e',
-        'X-Salada':    '#f07030',
-        'X-Bacon':     '#e8a020',
-        'Fire Classic':'#c8691a',
-        'Fire Blue':   '#1971c2',
-        'Fire Relish': '#d45010',
-        'Fire Chicken':'#a02808'
-      };
-      const burgerBaseName = name => {
-        if (burgerSubcat(name) !== burgerSub) return '_skip_';
-        const n = name.toLowerCase();
-        if (n.includes('chicken'))                           return 'Fire Chicken';
-        if (n.includes('relish'))                            return 'Fire Relish';
-        if (n.includes('blue'))                              return 'Fire Blue';
-        if (n.includes('classic'))                           return 'Fire Classic';
-        if (n.includes('x-bacon') || n.includes('x bacon')) return 'X-Bacon';
-        if (n.includes('salada'))                            return 'X-Salada';
-        if (n.includes('x-burger') || n.includes('x burger') || n.includes('x- burger')) return 'X-Burger';
-        return '_skip_';
-      };
-      totCur = buildTotals(getProducts(), 'Burger', burgerBaseName, subcats, getChanRatio);
-      tot25  = buildTotals(prods25, 'Burger', burgerBaseName, subcats, getChanRatio);
-      if (activeYear === '2026' && plataforma === 'all' && canal === 'all') {
-        const _allRaw = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g','Hot Dog'], getChanRatio);
-        const _BQ = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':3085};
-        ALL_MN.forEach(m => {
-          const _c = _BQ[m]; if (!_c) return;
-          const _rt = ['100g & Chicken','140g','Hot Dog'].reduce((s,c) => s + (_allRaw[m][c]||0), 0);
-          if (!_rt) return;
-          const _sc = _c / _rt;
-          subcats.forEach(c => { totCur[m][c] = Math.round((totCur[m][c]||0) * _sc); });
-        });
-      }
+    if (burgerSub !== 'all') {
+      // Drill: show individual products in the selected sub-group
+      subcats    = [];
+      subColors  = {};
+      const ITEM_PALETTE = ['#e03a0e','#c8691a','#f07030','#e8a020','#8b3a0a','#d45010','#a02808','#f09060','#604020','#c04818','#e06840','#702010'];
+      let pi = 0;
+      Object.entries(getProducts()).forEach(([name, p]) => {
+        if (displayCat(p.cat, name) === 'Burger' && burgerSubcat(name) === burgerSub) {
+          if (!subcats.includes(name)) { subcats.push(name); subColors[name] = ITEM_PALETTE[pi++ % ITEM_PALETTE.length]; }
+        }
+      });
+      totCur = buildTotals(getProducts(), 'Burger', n => n, subcats, getChanRatio);
+      tot25  = buildTotals(prods25, 'Burger', n => n, subcats, getChanRatio);
     } else {
       subcats    = ['100g & Chicken','140g','Hot Dog'];
       subColors  = {'100g & Chicken':'#e03a0e','140g':'#c8691a','Hot Dog':'#8b3a0a'};
       totCur = buildTotals(getProducts(), 'Burger',burgerSubcat,subcats, getChanRatio);
       tot25  = buildTotals(prods25,'Burger',burgerSubcat,subcats, getChanRatio);
       // Correção: ajusta totais 2026 para bater com quantidades reais do ConnectPlug
-      if (plataforma === 'all' && canal === 'all') {
-        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':3085};
+      if (plataforma === 'all') {
+        const BURGER_QTY_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2095};
+        const BURGER_COMPUTED_BASE = {'01':2326,'02':2633,'03':3369,'04':2856,'05':3081,'06':2709,'07':2299};
         ALL_MN.forEach(m => {
           const correct = BURGER_QTY_2026[m];
-          if (!correct) return;
-          const base = subcats.reduce((s,c) => s + (totCur[m][c]||0), 0);
-          if (!base) return;
+          const base = BURGER_COMPUTED_BASE[m];
+          if (!correct || !base) return;
           const scale = correct / base;
           subcats.forEach(c => { totCur[m][c] = Math.round((totCur[m][c]||0) * scale); });
         });
@@ -9474,119 +9221,29 @@ function renderMixAuv() {
       tot25  = buildTotals(prods25,'Entradas',entradasSubcat,subcats, getChanRatio);
     }
   }
-  else if (catFilter === 'Bebidas')      { subcats = ['Refri','Água','Fire Fresh'];                                    subColors = {'Refri':'#90e0ef','Água':'#0077b6','Fire Fresh':'#e03a0e'}; totCur = buildTotals(getProducts(), 'Bebidas',bebidasSubcat,subcats, getChanRatio);   tot25 = buildTotals(prods25,'Bebidas',bebidasSubcat,subcats, getChanRatio); }
+  else if (catFilter === 'Bebidas')      { subcats = ['Refri','Água','Fire Fresh','Milk Shake'];                       subColors = {'Refri':'#4cc9f0','Água':'#22b4d6','Fire Fresh':'#e03a0e','Milk Shake':'#9b59b6'}; totCur = buildTotals(getProducts(), 'Bebidas',bebidasSubcat,subcats, getChanRatio);   tot25 = buildTotals(prods25,'Bebidas',bebidasSubcat,subcats, getChanRatio); }
   else if (catFilter === 'Cervejas')     { subcats = ['Cerveja Fire','Outras'];                                        subColors = {'Cerveja Fire':'#e03a0e','Outras':'#ff8c42'}; totCur = buildTotals(getProducts(), 'Cervejas',cervejasSubcat,subcats, getChanRatio);  tot25 = buildTotals(prods25,'Cervejas',cervejasSubcat,subcats, getChanRatio); }
-  else if (catFilter === 'Sobremesas')   { subcats = ['Pudim','Brownie','Milk Shake'];                               subColors = {'Pudim':'#ff77a0','Brownie':'#c0392b','Milk Shake':'#9b59b6'}; totCur = buildTotals(getProducts(), 'Sobremesas',sobSubcat,subcats, getChanRatio);     tot25 = buildTotals(prods25,'Sobremesas',sobSubcat,subcats, getChanRatio); }
+  else if (catFilter === 'Sobremesas')   { subcats = ['Pudim','Brownie'];                                              subColors = {'Pudim':'#ff77a0','Brownie':'#c0392b'}; totCur = buildTotals(getProducts(), 'Sobremesas',sobSubcat,subcats, getChanRatio);     tot25 = buildTotals(prods25,'Sobremesas',sobSubcat,subcats, getChanRatio); }
   else if (catFilter === 'Promo')        { subcats = ['Combo 100g','Combo 140g','4 por R$99','4 por R$119','2x1'];     subColors = {'Combo 100g':'#a259ff','Combo 140g':'#7b3dcc','4 por R$99':'#c87eff','4 por R$119':'#5c1fa8','2x1':'#e040fb'}; totCur = buildTotals(getProducts(), 'Promo',promoSubcat,subcats, getChanRatio);      tot25 = buildTotals(prods25,'Promo',promoSubcat,subcats, getChanRatio); }
   else { subcats = AUV_CATS; subColors = CAT_COLORS; totCur = buildAllCatTotals(getProducts(), getChanRatio); tot25 = buildAllCatTotals(prods25, getChanRatio); }
 
-  // Promo plataformas: collapse to single bar (combo/2x1) or split by tamanho (familia)
+  // Promo plataformas: collapse to single bar with promo color
   if (['combo','2x1','familia'].includes(plataforma) && catFilter === 'all') {
-    if (plataforma === 'familia') {
-      const FAMILIA_2026 = { '07': { total: 66, '100g': 53, '140g': 13 }, '08': { total: 79, '100g': 49, '140g': 30 }, '09': { total: 67, '100g': 35, '140g': 32 } };
-      if (tamanho === 'all') {
-        subcats   = ['Família'];
-        subColors = { 'Família': '#c87eff' };
-        [totCur, tot25].forEach(tot => {
-          Object.keys(tot).forEach(m => { tot[m] = { 'Família': tot[m]['Burger'] || 0 }; });
-        });
-        if (activeYear === '2026') {
-          ALL_MN.forEach(m => {
-            const ov = FAMILIA_2026[m]; if (!ov) return;
-            totCur[m] = { 'Família': canal === 'salao' ? 0 : ov.total };
-          });
-        }
-      } else {
-        const is100g = tamanho === '100g';
-        const lbl = is100g ? '4 por R$99' : '4 por R$119';
-        const sub = is100g ? '100g & Chicken' : '140g';
-        subcats   = [lbl];
-        subColors = { [lbl]: is100g ? '#c87eff' : '#5c1fa8' };
-        const famBurCur = buildTotals(getProducts(), 'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
-        const famBur25  = buildTotals(prods25,        'Burger', burgerSubcat, ['100g & Chicken','140g'], getChanRatio);
-        ALL_MN.forEach(m => {
-          totCur[m] = { [lbl]: (famBurCur[m]?.[sub] || 0) / 4 };
-          tot25[m]  = { [lbl]: (famBur25[m]?.[sub]  || 0) / 4 };
-        });
-        if (activeYear === '2026') {
-          ALL_MN.forEach(m => {
-            const ov = FAMILIA_2026[m]; if (!ov || ov[tamanho] === null) return;
-            totCur[m] = { [lbl]: canal === 'salao' ? 0 : ov[tamanho] };
-          });
-        }
-      }
-    } else {
-      const PLBL = { combo: 'Combo', '2x1': '2x1' };
-      const PCLR = { combo: '#7b3dcc', '2x1': '#e040fb' };
-      const lbl = PLBL[plataforma], clr = PCLR[plataforma];
-      subcats   = [lbl];
-      subColors = { [lbl]: clr };
-      [totCur, tot25].forEach(tot => {
-        Object.keys(tot).forEach(m => { tot[m] = { [lbl]: tot[m]['Burger'] || 0 }; });
+    const PLBL = { combo: 'Combo', '2x1': '2x1', familia: 'Família' };
+    const PCLR = { combo: '#7b3dcc', '2x1': '#e040fb', familia: '#c87eff' };
+    const lbl = PLBL[plataforma], clr = PCLR[plataforma];
+    subcats   = [lbl];
+    subColors = { [lbl]: clr };
+    [totCur, tot25].forEach(tot => {
+      Object.keys(tot).forEach(m => { tot[m] = { [lbl]: tot[m]['Burger'] || 0 }; });
+    });
+    if (activeYear === '2026' && plataforma === 'combo') {
+      const COMBO_CANAL_2026 = {'07':{'salao':107,'delivery':202,'total':309}};
+      ALL_MN.forEach(m => {
+        const cq = COMBO_CANAL_2026[m]; if (!cq) return;
+        const v = canal === 'salao' ? 0 : cq.delivery;
+        totCur[m] = { [lbl]: v };
       });
-      if (activeYear === '2026' && plataforma === 'combo') {
-        const COMBO_CANAL_2026 = {
-          '07': {
-            all:   { all: 309, salao: 107, delivery: 202 },
-            '100g': { all: 145, salao: 54,  delivery: 91  },
-            '140g': { all: 164, salao: 53,  delivery: 111 }
-          },
-          '08': {
-            all:   { all: 663, salao: 456, delivery: 207 },
-            '100g': { all: 223, salao: 153, delivery: 70  },
-            '140g': { all: 440, salao: 303, delivery: 137 }
-          },
-          '09': {
-            all:   { all: 640, salao: 450, delivery: 190 },
-            '100g': { all: 214, salao: 164, delivery: 50  },
-            '140g': { all: 426, salao: 286, delivery: 140 }
-          }
-        };
-        ALL_MN.forEach(m => {
-          const cq = COMBO_CANAL_2026[m]; if (!cq) return;
-          const szKey = tamanho === 'all' ? 'all' : tamanho;
-          const entry = cq[szKey]; if (entry == null) return;
-          let v;
-          if (typeof entry === 'object') {
-            if (canal === 'salao')    v = entry.salao    ?? null;
-            else if (canal === 'all') v = entry.all      ?? null;
-            else                       v = entry.delivery ?? null;
-          } else {
-            v = canal === 'salao' ? null : entry;
-          }
-          if (v == null) return;
-          totCur[m] = { [lbl]: v };
-        });
-      }
-      if (activeYear === '2026' && plataforma === '2x1') {
-        const X2X1_2026 = {
-          '08': {
-            all:   { all: 138, salao: 0, delivery: 138 },
-            '100g': { all: 37, salao: 0, delivery: 37 },
-            '140g': { all: 101, salao: 0, delivery: 101 }
-          },
-          '09': {
-            all:   { all: 68, salao: 0, delivery: 68 },
-            '100g': { all: 18, salao: 0, delivery: 18 },
-            '140g': { all: 50, salao: 0, delivery: 50 }
-          }
-        };
-        ALL_MN.forEach(m => {
-          const cq = X2X1_2026[m]; if (!cq) return;
-          const szKey = tamanho === 'all' ? 'all' : tamanho;
-          const entry = cq[szKey]; if (entry == null) return;
-          let v;
-          if (typeof entry === 'object') {
-            if (canal === 'salao')    v = entry.salao    ?? null;
-            else if (canal === 'all') v = entry.all      ?? null;
-            else                       v = entry.delivery ?? null;
-          } else {
-            v = canal === 'salao' ? null : entry;
-          }
-          if (v == null) return;
-          totCur[m] = { [lbl]: v };
-        });
-      }
     }
   }
 
@@ -9687,14 +9344,12 @@ function renderChannels() {
 
     const _juneFore = (activeYear === '2026') ? getJuneForecast2026() : null;
   const _julFore  = (activeYear === '2026') ? getJulyForecast2026()  : null;
-  const _sepFore  = (activeYear === '2026') ? getSeptemberForecast2026() : null;
     chartMnums.forEach(m => {
       const d = RM[m] || {};
-      // June/July/September 2026: use forecast projection values
+      // June/July 2026: use forecast projection values
       const _isForeJun = activeYear === '2026' && m === '06' && _juneFore;
       const _isForeJul = activeYear === '2026' && m === '07' && _julFore;
-      const _isForeSep = activeYear === '2026' && m === '09' && _sepFore;
-      const _fore = _isForeJun ? _juneFore : _isForeJul ? _julFore : _isForeSep ? _sepFore : null;
+      const _fore = _isForeJun ? _juneFore : _isForeJul ? _julFore : null;
       const _isForeMonth = !!_fore;
       const sv = _fore ? (_fore.salao||0) : (d.salao_val||0);
       const iv = _fore ? (_fore.ifood||0) : (d.ifood_val||0);
@@ -9719,20 +9374,17 @@ function renderChannels() {
       totalSalaoCups+=(d.salao_cups||0); totalIfoodCups+=(d.ifood_cups||0); totalKeetaCups+=(d.keeta_cups||0);
     });
 
-    // Forecast remainder for incomplete months (July/September 2026)
+    // Forecast remainder for incomplete months (July 2026)
     chartMnums.forEach((m, i) => {
       if (m === '07' && activeYear === '2026' && _julFore) {
         const realSum = (salaoData[i]||0) + (ifoodData[i]||0) + (food99Data[i]||0) + (keetaData[i]||0);
         foreData.push(_julFore.total > realSum ? round2(_julFore.total - realSum) : 0);
-      } else if (m === '09' && activeYear === '2026' && _sepFore) {
-        const realSum = (salaoData[i]||0) + (ifoodData[i]||0) + (food99Data[i]||0) + (keetaData[i]||0);
-        foreData.push(_sepFore.total > realSum ? round2(_sepFore.total - realSum) : 0);
       } else { foreData.push(0); }
     });
 
     chartMnums.forEach(m => {
       const d = RM[m]||{};
-      const _tFore = (activeYear==='2026'&&m==='06'&&_juneFore) ? _juneFore : (activeYear==='2026'&&m==='07'&&_julFore) ? _julFore : (activeYear==='2026'&&m==='09'&&_sepFore) ? _sepFore : null;
+      const _tFore = (activeYear==='2026'&&m==='06'&&_juneFore) ? _juneFore : (activeYear==='2026'&&m==='07'&&_julFore) ? _julFore : null;
       const sv=_tFore?(_tFore.salao||0):(d.salao_val||0);
       const iv=_tFore?(_tFore.ifood||0):(d.ifood_val||0);
       const f9=_tFore?(_tFore.food99||0):(d.food99_val||0);
@@ -10091,9 +9743,9 @@ function computeChannelMixProducts(monthFilter, yearFilter, dayFilter) {
     };
 
     const list = Object.entries(CP).map(([name, d]) => {
-      const salaoFull = d.salao||0, ifoodFull = d.ifood||0, food99Full = d.food99||0, keetaFull = d.keeta||0;
-      const totalFull = salaoFull + ifoodFull + food99Full + keetaFull;
-      let salao = salaoFull, ifood = ifoodFull, food99 = food99Full, keeta = keetaFull;
+      const salaoFull = d.salao||0, ifoodFull = d.ifood||0, food99Full = d.food99||0;
+      const totalFull = salaoFull + ifoodFull + food99Full;
+      let salao = salaoFull, ifood = ifoodFull, food99 = food99Full;
       if (monthFilter !== 'all') {
         const prod = fuzzyMatch(name);
         if (prod && prod.dates) {
@@ -10106,16 +9758,14 @@ function computeChannelMixProducts(monthFilter, yearFilter, dayFilter) {
           salao  = Math.round(salaoFull  * ratio);
           ifood  = Math.round(ifoodFull  * ratio);
           food99 = Math.round(food99Full * ratio);
-          keeta  = Math.round(keetaFull  * ratio);
         } else {
           // Fallback: proporcional à receita do mês
           salao  = Math.round(salaoFull  * monthRevPct);
           ifood  = Math.round(ifoodFull  * monthRevPct);
           food99 = Math.round(food99Full * monthRevPct);
-          keeta  = Math.round(keetaFull  * monthRevPct);
         }
       }
-      return { name, salao, ifood, food99, keeta, cat: displayCat(d.cat, name), size: d.size||'', cname: d.cname||name, matched: true };
+      return { name, salao, ifood, food99, cat: displayCat(d.cat, name), size: d.size||'', cname: d.cname||name, matched: true };
     });
     return { list, mode: 'real', anyUnmatched: false };
   }
@@ -10344,8 +9994,10 @@ function renderChannelMix() {
     data: {
       labels,
       datasets: [
-        { label: '🏠 Salão',    data: top20.map(p => p.salao||0),  backgroundColor: 'rgba(224,58,14,0.85)', borderRadius: 3 },
-        { label: '📦 Delivery', data: top20.map(p => (p.ifood||0)+(p.food99||0)+(p.keeta||0)), backgroundColor: 'rgba(200,16,46,0.85)', borderRadius: 3 }
+        { label: '🏠 Salão',  data: top20.map(p => p.salao||0),  backgroundColor: 'rgba(224,58,14,0.85)',  borderRadius: 3 },
+        { label: '📱 iFood',  data: top20.map(p => p.ifood||0),  backgroundColor: 'rgba(200,16,46,0.85)',  borderRadius: 3 },
+        { label: '🟠 99food', data: top20.map(p => p.food99||0), backgroundColor: 'rgba(224,112,0,0.85)', borderRadius: 3 },
+        { label: '🟢 Keeta',  data: top20.map(p => p.keeta||0),  backgroundColor: 'rgba(0,176,155,0.85)',  borderRadius: 3 }
       ]
     },
     options: {
@@ -10368,9 +10020,9 @@ function renderChannelMix() {
               color: '#fff', font: { size: 9, weight: '700' },
               anchor: 'center', align: 'center', clamp: true
             },
-            // Total em cima da última barra (Delivery)
+            // Total em cima da última barra (99food)
             total: {
-              display: ctx => ctx.datasetIndex === 1,
+              display: ctx => ctx.datasetIndex === 3,
               formatter: (v, ctx) => {
                 const i = ctx.dataIndex;
                 const ds = ctx.chart.data.datasets;
@@ -10702,8 +10354,6 @@ function renderFollowup() {
   _fdMon.forEach(d => { const p=d.data.split('/'); foreMap[p[0]+'/'+p[1]+'/2026'] = d; });
   const pastProj   = pastDates.reduce((s,d) => { const fd=foreMap[d]; return s+(fd?.forecast ?? fd?.meta ?? fd?.real ?? 0); }, 0);
   const pastVsProj = pastProj > 0 ? (pastRev - pastProj) / pastProj * 100 : null;
-  const pastMeta   = pastDates.reduce((s,d) => { const fd=foreMap[d]; return s+(fd?.meta||0); }, 0);
-  const pastVsMeta = pastMeta > 0 ? (pastRev - pastMeta) / pastMeta * 100 : null;
 
   // Next week: use forecast data where available, otherwise estimate with avg
   const pastDailyAvg = pastDays > 0 ? pastRev/pastDays : 0;
@@ -10799,12 +10449,10 @@ function renderFollowup() {
   const _salaoVal  = _foreDataForMon ? round2(_foreDataForMon.salao)  : (rm26[_mesNum]?.salao_val  || 0);
   const _ifoodVal  = _foreDataForMon ? round2(_foreDataForMon.ifood)  : (rm26[_mesNum]?.ifood_val  || 0);
   const _food99Val = _foreDataForMon ? round2(_foreDataForMon.food99) : (rm26[_mesNum]?.food99_val || 0);
-  const _keetaVal  = rm26[_mesNum]?.keeta_val || 0;
-  const _storeOnly = _salaoVal + _ifoodVal + _food99Val + _keetaVal;
-  const _salaoP    = _storeOnly > 0 ? _salaoVal/_storeOnly*100   : 0;
-  const _ifoodP    = _storeOnly > 0 ? _ifoodVal/_storeOnly*100   : 0;
-  const _f99P      = _storeOnly > 0 ? _food99Val/_storeOnly*100  : 0;
-  const _keetaP    = _storeOnly > 0 ? _keetaVal/_storeOnly*100   : 0;
+  const _storeOnly = _salaoVal + _ifoodVal + _food99Val + (rm26[_mesNum]?.keeta_val || 0);
+  const _salaoP    = _storeOnly > 0 ? _salaoVal/_storeOnly*100  : 0;
+  const _ifoodP    = _storeOnly > 0 ? _ifoodVal/_storeOnly*100  : 0;
+  const _f99P      = _storeOnly > 0 ? _food99Val/_storeOnly*100 : 0;
 
   // SSS vs 2025 (store-only, para comparação justa)
   const _june25Store = rm25[_mesNum]?.total || 0;
@@ -10939,17 +10587,18 @@ function renderFollowup() {
   ].join('\n');
   window._fuSummaryText = _headText;
   if (headEl) headEl.innerHTML = _isMesFechado
-    ? `<span style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">✅ Fechamento ${_MES_FULL[_mesNum].slice(0,3)}'${String(_anoAtivo).slice(2)}</span>
+    ? `<span style="font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">✅ Fechamento ${_MES_FULL[_mesNum]} ${_anoAtivo}</span>
+       &nbsp;·&nbsp;<strong>${fmtR(_storeOnly)}</strong> loja&nbsp;+&nbsp;<strong style="color:rgba(162,89,255,0.9)">${fmtR(_juneEvTotal)}</strong> eventos
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Faturamento:</span> <strong>${fmtR(_storeOnly)}</strong>${_juneEvTotal > 0 ? ` <span style="color:var(--muted)">+ ${fmtR(_juneEvTotal)} eventos</span>` : ''}
+       <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
+       &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
+       &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Meta:</span> <span style="color:${_vsMetaColor};font-weight:700">${_vsMetaSign}${fmt(_vsMetaPct,1)}%</span>
+       <span style="color:var(--muted)">vs meta</span> <span style="color:${_vsMetaColor};font-weight:700">${_vsMetaSign}${fmt(_vsMetaPct,1)}%</span>
+       &nbsp;·&nbsp;<span style="color:var(--muted)">vs proj.</span> <span style="color:${_vsProjColor};font-weight:700">${_vsProjSign}${fmt(_vsProjPct,1)}%</span>
        &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">vs ${_anoAtivo-1}:</span> <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span>
-       &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Mix:</span> Salão <strong>${fmt(_salaoP,1)}%</strong> &nbsp;·&nbsp; Delivery <strong>${fmt(_ifoodP+_f99P+_keetaP,1)}%</strong>
-       &nbsp;&nbsp;|&nbsp;&nbsp;
-       <span style="color:var(--muted)">Média/dia:</span> <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
+       SSS loja <span style="color:${_sssStoreColor};font-weight:700">${_sssStore>=0?'+':''}${fmt(_sssStore,1)}%</span> vs ${_anoAtivo-1}
+       &nbsp;·&nbsp;Média/dia <span style="color:${_avgColor};font-weight:700">${fmtR(_dailyAvg26)}</span>
        `
     : _isMonthForecast
     ? `<span style="font-size:13px;font-weight:800;color:#22c55e;text-transform:uppercase;letter-spacing:.5px">🎯 Expectativa ${_MES_FULL[_mesNum]} ${_anoAtivo}</span>
@@ -10959,7 +10608,7 @@ function renderFollowup() {
        <span style="color:var(--muted)">Salão</span> <strong>${fmtR(_salaoVal)}</strong> <span style="color:var(--muted)">(${fmt(_salaoP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">iFood</span> <strong>${fmtR(_ifoodVal)}</strong> <span style="color:var(--muted)">(${fmt(_ifoodP,1)}%)</span>
        &nbsp;·&nbsp;<span style="color:var(--muted)">99food</span> <strong>${fmtR(_food99Val)}</strong> <span style="color:var(--muted)">(${fmt(_f99P,1)}%)</span>`
-    : `<span style="color:var(--muted)">Semana ${_weekStart}–${_weekEnd}:</span> <strong>${fmtR(pastRev)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(pastMeta)}</strong>${pastVsMeta!=null?` <span style="color:${pastVsMeta>=0?'#06d6a0':'#ff4444'};font-weight:700">(${pastVsMeta>=0?'+':''}${fmt(pastVsMeta,1)}%)</span>`:''} · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> de <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_metaStretch6>0?juneReal/_metaStretch6*100:0,1)}%)</span> · <span style="color:var(--muted)">Real vs proj.:</span> <strong>${fmtR(juneReal)}</strong> vs <strong>${fmtR(_projFinalFU)}</strong>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
+    : `Semana passada: <strong>${fmtR(pastRev)}</strong>${pastVsProj!=null?` <span style="color:${pvpColor};font-weight:700">(${fmt(Math.abs(pastVsProj),1)}% ${pvpSign} do proj.)</span>`:''} · Esta semana: <strong>${fmtR(nextProjRev)}</strong> projetado · <span style="color:var(--muted)">${_MES_FULL[_mesAtual]} acumulado:</span> <strong>${fmtR(juneReal)}</strong> <span style="color:${_pctForeColor};font-weight:700">(${fmt(_pctForeHead,1)}% do mês)</span> · Projeção mês: <strong>${fmtR(_projFinalFU)}</strong> · <span style="color:var(--muted)">Meta:</span> <strong>${fmtR(_metaStretch6)}</strong> <span style="color:${_metaStrColor};font-weight:700">(${fmt(_pctMetaStretch,1)}%${_faltaMeta6>0?' · falta '+fmtR(_faltaMeta6):' ✅'})</span> · SSS proj. vs ${parseInt(activeYear)-1}: <span style="color:${_sssFullColor};font-weight:700">${_sssFull>=0?'+':''}${fmt(_sssFull,1)}%</span>${_evLine ? ` · <span style="color:rgba(162,89,255,0.9);font-weight:700">🎪 ${_evLine}</span>` : ''}`;
 
   // ── Venda Diária vs Meta (substituiu Mês em Andamento) ─────────────
   {
@@ -10976,8 +10625,7 @@ function renderFollowup() {
     const fdBarData = FD.map(d => {
       if (!d.is_real) return null;
       if (d.real == null) return null;
-      const _chs = (d.salao||0)+(d.ifood||0)+(d.food99||0)+(d.keeta||0);
-    return round2(_chs > 0 ? _chs : (d.real || 0));
+      return round2((d.salao || 0) + (d.ifood || 0) + (d.food99 || 0) + (d.keeta || 0));
     });
     const fdMetaData  = FD.map(d => d.meta);
     const fdEventoData = FD.map(d => {
@@ -11355,6 +11003,7 @@ function renderFollowup() {
         : [
             barRow('📅 Semana vs Projeção', pastRev, pastProj||pastRev, 'rgba(224,58,14,0.85)', `proj. ${fmtR(pastProj||0)}`),
             barRow(`📆 ${_MES_FULL[_mesAcum]} vs Meta`, _gStore, _gMetaStretch, 'rgba(224,58,14,0.75)', `meta ${fmtR(_gMetaStretch)}`),
+            barRow(`📆 ${_MES_FULL[_mesAcum]} + Eventos`, _gTotal, _gMetaStretch, 'rgba(162,89,255,0.75)', `meta +6% ${fmtR(_gMetaStretch)}`),
           ].join('');
     }
   }
@@ -11401,8 +11050,8 @@ function renderFollowup() {
   destroyChart('fuCouponFuChart');
   destroyChart('fuTicketFuChart');
   {
-    const tkMonths = ['01','02','03','04','05','06','07','08','09'];
-    const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set'}[m]));
+    const tkMonths = ['01','02','03','04','05','06','07'];
+    const tkLabels = tkMonths.map(m => ({'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul'}[m]));
     const dlTop = { anchor:'end', align:'end', offset:2, clamp:true,
       backgroundColor:'rgba(255,255,255,0.82)', borderRadius:3,
       padding:{top:2,bottom:2,left:4,right:4} };
@@ -11479,13 +11128,10 @@ function renderFollowup() {
   // ── SSS mensal (Jan–Jun real + Julho forecast) ───────────────────────
   const _juneEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='06'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _juneForeWithEvFixed = juneForeTotal + _juneEvFixed;
-  const _julEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
   const _julForeEvFixed = getActiveForecastMonth(activeYear, '07').metaTotal
     + (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='07'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
-  const _sepEvFixed = (EVENTOS||[]).filter(e=>e.data.slice(3,5)==='09'&&e.data.endsWith(String(activeYear))).reduce((s,e)=>s+(e.valor||0),0);
-  const _sepForeEvFixed = (activeYear==='2026' ? (getSeptemberForecast2026()?.total||0) : (getActiveForecastMonth(activeYear,'09').metaTotal||0)) + _sepEvFixed;
-  const MN_SSS = ['01','02','03','04','05','06','07','08','09'];
-  const sss26  = MN_SSS.map(m => m==='06' ? _juneForeWithEvFixed : m==='07' ? _julForeEvFixed : m==='09' ? _sepForeEvFixed : rm26[m]?.total||0);
+  const MN_SSS = ['01','02','03','04','05','06','07'];
+  const sss26  = MN_SSS.map(m => m==='06' ? _juneForeWithEvFixed : m==='07' ? _julForeEvFixed : rm26[m]?.total||0);
   const sss25  = MN_SSS.map(m => rm25[m]?.total||0);
   const sssPct = MN_SSS.map((m,i) => sss25[i]>0 ? +((sss26[i]-sss25[i])/sss25[i]*100).toFixed(1) : 0);
 
@@ -11505,24 +11151,13 @@ function renderFollowup() {
       return { salao: Math.round(base*sMix), delivery: Math.round(base*dMix), evento: ev };
     }
     if (m === '07') {
-      const ev7 = _julEvFixed;
-      const base7 = _julForeEvFixed - ev7;
-      const d07 = rm26['07'] || {};
-      const opTot07 = d07.total || 0;
-      const sMix7 = opTot07 > 0 ? (d07.salao_val||0)/opTot07 : 0.50;
-      const dMix7 = opTot07 > 0 ? ((d07.ifood_val||0)+(d07.food99_val||0)+(d07.keeta_val||0))/opTot07 : 0.50;
-      return { salao: Math.round(base7*sMix7), delivery: Math.round(base7*dMix7), evento: ev7 };
+      const mn6 = ['01','02','03','04','05','06'];
+      const tS  = mn6.reduce((s,mm)=>s+(rm26[mm]?.salao_val||0),0);
+      const tD  = mn6.reduce((s,mm)=>s+((rm26[mm]?.ifood_val||0)+(rm26[mm]?.food99_val||0)),0);
+      const tot = tS+tD||1;
+      return { salao: Math.round(_julForeEvFixed*tS/tot), delivery: Math.round(_julForeEvFixed*tD/tot), evento: 0 };
     }
-    if (m === '09') {
-      const ev9 = _sepEvFixed;
-      const base9 = _sepForeEvFixed - ev9;
-      const d09 = rm26['09'] || {};
-      const opTot09 = d09.total || 0;
-      const sMix9 = opTot09 > 0 ? (d09.salao_val||0)/opTot09 : 0.43;
-      const dMix9 = opTot09 > 0 ? ((d09.ifood_val||0)+(d09.food99_val||0)+(d09.keeta_val||0))/opTot09 : 0.57;
-      return { salao: Math.round(base9*sMix9), delivery: Math.round(base9*dMix9), evento: ev9 };
-    }
-    return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0)+(d.keeta_val||0), evento: 0 };
+    return { salao: d.salao_val||0, delivery: (d.ifood_val||0)+(d.food99_val||0), evento: 0 };
   };
   const _chanSplit25 = (m) => {
     const d = rm25[m] || {};
@@ -11571,7 +11206,7 @@ function renderFollowup() {
       },
       // ── 2026 direita ──────────────────────────────────────────────
       { label: '🏠 Salão 2026', data: s26d,
-        backgroundColor: MN_SSS.map(m => m==='09' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
+        backgroundColor: MN_SSS.map(m => m==='07' ? 'rgba(34,197,94,0.75)' : 'rgba(224,58,14,0.88)'),
         borderRadius: 0, barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
         datalabels: { display: ctx => s26d[ctx.dataIndex] > 0 && sss26[ctx.dataIndex] > 0,
@@ -11580,7 +11215,7 @@ function renderFollowup() {
           anchor: 'center', align: 'center' }
       },
       { label: '🛵 Delivery 2026', data: d26d,
-        backgroundColor: MN_SSS.map(m => m==='09' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
+        backgroundColor: MN_SSS.map(m => m==='07' ? 'rgba(34,197,94,0.50)' : 'rgba(224,100,20,0.70)'),
         borderRadius: MN_SSS.map((_,i) => e26d[i] > 0 ? 0 : 3),
         barPercentage: 0.9, categoryPercentage: 0.55, stack: 'b',
         order: 2,
@@ -11637,11 +11272,11 @@ function renderFollowup() {
   const sssBody = document.getElementById('fu-sss-body');
   if (sssBody) sssBody.innerHTML = MN_SSS.map((m,i) => {
     const v26=sss26[i], v25=sss25[i], pct=sssPct[i];
-    const isFore = m==='09';
-    const _rowBg  = m==='09' ? 'background:rgba(34,197,94,0.04)' : '';
+    const isFore = m==='07';
+    const _rowBg  = m==='07' ? 'background:rgba(34,197,94,0.04)' : '';
     return `<tr style="border-bottom:1px solid var(--border);${_rowBg}">
       <td style="padding:6px 8px;font-weight:700">${MN_FULL[m]}${isFore?' <span style="font-size:10px;color:var(--muted)">(proj.)</span>':''}</td>
-      <td style="padding:6px 8px;text-align:right;font-weight:700;color:${m==='09'?'#22c55e':'var(--accent)'}">${fmtR(v26)}</td>
+      <td style="padding:6px 8px;text-align:right;font-weight:700;color:${m==='07'?'#22c55e':'var(--accent)'}">${fmtR(v26)}</td>
       <td style="padding:6px 8px;text-align:right;color:var(--muted)">${fmtR(v25)}</td>
       <td style="padding:6px 8px;text-align:right;font-weight:700;color:${pct>=0?'#06d6a0':'#ff4444'}">${pct>=0?'+':''}${pct}%</td>
       <td style="padding:6px 8px;text-align:right">${rm26[m]?.ticket>0?fmtR(rm26[m].ticket):'—'}</td>
@@ -11662,7 +11297,7 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 
   if (name === 'overview') { renderOverview(); renderDailyChart(); }
-  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); renderNovosAuv(); }
+  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); }
   else if (name === 'channels') { renderChannels(); renderChannelMix(); }
   else if (name === 'followup') renderFollowup();
   else if (name === 'sss') renderSSS();
@@ -11796,10 +11431,11 @@ function renderForecast() {
   const gapStretch    = round2(totalProj - metaStretch);  // sempre negativo (meta > proj)
   const pctStretch    = totalProj > 0 ? ((totalProj / metaStretch) * 100) : 0;
   const kpis = [
-    { label: 'Meta do Mês', val: 'R$ ' + fmt(metaTotal), sub: _monLabel,                                                                                  color: 'var(--accent)' },
+    { label: 'Forecast do Mês', val: 'R$ ' + fmt(metaTotal), sub: _monLabel,                                                                                  color: 'var(--accent)' },
     { label: 'Real Acumulado',  val: 'R$ ' + fmt(totalReal), sub: totalReal > 0 ? (pctReal).toFixed(1) + '% do forecast' : '—',                              color: '#4cc9f0' },
     { label: 'Projeção Final',  val: totalReal > 0 ? 'R$ ' + fmt(totalProj) : '—', sub: totalReal > 0 ? (pctProj).toFixed(1) + '% do forecast' : 'sem real ainda', color: '#06d6a0' },
-    { label: 'Real vs Meta (acum.)', val: (gap >= 0 ? '+' : '') + 'R$ ' + fmt(Math.abs(gap)), sub: (gap >= 0 ? '▲ ' : '▼ ') + Math.abs(gap / (lastCumMeta||1) * 100).toFixed(1) + '% ' + (gap >= 0 ? 'acima' : 'abaixo') + ' da meta até hoje',  color: gap >= 0 ? '#22c55e' : '#ef4444' }
+    { label: 'Real vs Meta (acum.)', val: (gap >= 0 ? '+' : '') + 'R$ ' + fmt(Math.abs(gap)), sub: (gap >= 0 ? '▲ ' : '▼ ') + Math.abs(gap / (lastCumMeta||1) * 100).toFixed(1) + '% ' + (gap >= 0 ? 'acima' : 'abaixo') + ' da meta até hoje',  color: gap >= 0 ? '#22c55e' : '#ef4444' },
+    { label: 'Meta',             val: 'R$ ' + fmt(metaStretch), sub: totalReal > 0 ? pctStretch.toFixed(1) + '% da meta atingida' : 'meta do mês',        color: pctStretch >= 100 ? '#22c55e' : '#f59e0b' }
   ];
   const kpiEl = document.getElementById('forecast-kpis');
   kpiEl.innerHTML = kpis.map(k => `
@@ -11836,8 +11472,7 @@ function renderForecast() {
     if (_ch === 'ifood')  return round2(d.ifood  || 0);
     if (_ch === 'food99') return round2(d.food99 || 0);
     if (_ch === 'keeta')  return round2(d.keeta  || 0);
-    const _chs = (d.salao||0)+(d.ifood||0)+(d.food99||0)+(d.keeta||0);
-    return round2(_chs > 0 ? _chs : (d.real || 0));
+    return round2((d.salao || 0) + (d.ifood || 0) + (d.food99 || 0) + (d.keeta || 0));
   });
 
   // Per-channel meta line: prorated by that channel's share of the day's total
@@ -12368,123 +12003,6 @@ function renderSSS() {
 // ── Promo Breakdown ─────────────────────────────────────────────────
 const PROMO_ITEMS = {"4 por 119":{"Burger":{"Fire Classic":1,"X-Bacon":2,"Fire Blue":3,"X-Salada":3,"X-Burger":1,"Fire Relish":1}},"4 por 99":{"Burger":{"X-Bacon":2,"Fire Blue":1,"X-Salada":2,"X-Burger":2,"Fire Classic":1}},"Combo 100g":{"Burger":{"Fire Blue":2,"X-Bacon":1,"X-Burger":2,"X-Salada":3},"Batata":{"Fritas PQ":7,"Fritas GD":1},"Bebida":{"Guaraná 350ml":1,"Guaraná zero 350ml":4,"Coca 250ml":3}},"Combo 140g":{"Batata":{"Fritas GD":6,"Fritas PQ":9},"Bebida":{"Coca 250ml":4,"Guaraná 350ml":3,"Guaraná zero 350ml":6,"Coca zero 250ml":2},"Burger":{"Fire Classic":3,"X-Bacon":2,"Fire Blue":5,"X-Salada":2,"X-Burger":1,"Fire Relish":2}},"2x1":{"Burger":{"Fire Blue":2,"Fire Classic":4,"Fire Relish":1,"X-Salada":6}}};
 
-
-function renderNovosAuv() {
-  const canvas = document.getElementById('novosAuvChart');
-  if (!canvas) return;
-
-  // Meses com dados para produtos novos (acumula todos)
-  const allMeses = [...new Set(
-    NOVOS_PRODUTOS_2026.flatMap(p => Object.keys(p.qtd))
-  )].sort();
-
-  if (!allMeses.length) { destroyChart('novosAuvChart'); return; }
-
-  // Compute op_days since launch for each mes
-  function opDaysSinceLaunch(inicioStr, mes) {
-    const [dI, mI, yI] = inicioStr.split('/').map(Number);
-    const launchDate = new Date(yI, mI-1, dI);
-    const daily = RAW.daily_combined || {};
-    let days = 0;
-    Object.keys(daily).forEach(dateStr => {
-      const [d, m, y] = dateStr.split('/').map(Number);
-      const mm = String(m).padStart(2,'0');
-      const dt = new Date(y, m-1, d);
-      if (mm === mes && dt >= launchDate) days++;
-    });
-    return Math.max(days, 1);
-  }
-
-  const MN_PT = {'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun',
-                  '07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
-  const xLabels = allMeses.map(m => MN_PT[m] || m);
-
-  // One dataset per product (stacked)
-  const datasets = NOVOS_PRODUTOS_2026.map(p => ({
-    label: p.label,
-    backgroundColor: p.cor + 'cc',
-    borderColor: p.cor,
-    borderWidth: 1,
-    borderRadius: 3,
-    stack: 'novos',
-    barPercentage: 0.4,
-    categoryPercentage: 0.6,
-    data: allMeses.map(mes => {
-      const qtd = p.qtd[mes];
-      if (!qtd) return null;
-      const days = opDaysSinceLaunch(p.inicio, mes);
-      return +(qtd.all / days).toFixed(1);
-    }),
-    datalabels: {
-      display: ctx => (ctx.dataset.data[ctx.dataIndex] || 0) > 0,
-      formatter: v => v != null ? v.toFixed(1) : '',
-      color: '#fff',
-      font: { size: 12, weight: '700' },
-      anchor: 'center',
-      align: 'center',
-    }
-  }));
-
-  // Total label on top of each bar
-  if (datasets.length) {
-    const last = datasets[datasets.length - 1];
-    last.datalabels = {
-      labels: {
-        seg: {
-          display: ctx => (ctx.dataset.data[ctx.dataIndex] || 0) > 0,
-          formatter: v => v != null ? v.toFixed(1) : '',
-          color: '#fff',
-          font: { size: 12, weight: '700' },
-          anchor: 'center',
-          align: 'center',
-        },
-        total: { display: false }
-      }
-    };
-  }
-
-  // Days label
-  const maxDays = allMeses.reduce((mx, mes) => {
-    const d = NOVOS_PRODUTOS_2026.reduce((m, p) => p.qtd[mes] ? Math.max(m, opDaysSinceLaunch(p.inicio, mes)) : m, 0);
-    return Math.max(mx, d);
-  }, 1);
-  const daysEl = document.getElementById('novos-auv-days-label');
-  if (daysEl) daysEl.textContent = maxDays === 1 ? '(1 dia de operação)' : `(${maxDays} dias de operação)`;
-
-  destroyChart('novosAuvChart');
-  charts['novosAuvChart'] = new Chart(canvas, {
-    type: 'bar',
-    data: { labels: xLabels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: { padding: { top: 28 } },
-      plugins: {
-        legend: {
-          display: true, position: 'bottom',
-          labels: { font: { size: 11 }, padding: 10, boxWidth: 12 }
-        },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const p = NOVOS_PRODUTOS_2026[ctx.datasetIndex];
-              const mes = allMeses[ctx.dataIndex];
-              const total = p?.qtd[mes]?.all ?? '?';
-              const days = p ? opDaysSinceLaunch(p.inicio, mes) : 1;
-              return ` ${ctx.dataset.label.replace(/^.*? /,'')}: ${ctx.raw}/dia (${total} total, ${days}d)`;
-            }
-          }
-        },
-        datalabels: {}
-      },
-      scales: {
-        x: { stacked: true, grid: { display: false }, ticks: { color: 'var(--text)', font: { size: 12 } } },
-        y: { stacked: true, grid: { color: 'rgba(0,0,0,0.07)' }, ticks: { display: false } }
-      }
-    }
-  });
-}
-
 function renderPromoBreakdown() {
   const filter = (document.getElementById('promo-filter')||{}).value || 'all';
   const promos = filter === 'all'
@@ -12568,7 +12086,7 @@ function renderDailyChart() {
   const multiMonth = moMin !== moMax;
   const labels   = days.map(([d]) => multiMonth ? d.slice(0,5) : d.slice(0,2)+'/'+d.slice(3,5));
   const salao    = days.map(([,v]) => v.salao  || 0);
-  const delivery = days.map(([,v]) => (v.ifood||0) + (v.food99||0) + (v.keeta||0));
+  const delivery = days.map(([,v]) => (v.ifood||0) + (v.food99||0));
   const totals   = salao.map((s,i) => s + delivery[i]);
 
   const fmtK = v => v >= 1000 ? 'R$' + (v/1000).toFixed(1) + 'k' : 'R$' + Math.round(v);
@@ -13765,6 +13283,102 @@ async function saveImportedFile() {
     if (statusEl) statusEl.textContent = '❌ Erro ao salvar: ' + err.message;
   }
 }_updateLastUpdateBadge("2026");
+function renderPeriodoResumo() {
+  const deEl  = document.getElementById('periodo-de');
+  const ateEl = document.getElementById('periodo-ate');
+  const out   = document.getElementById('periodo-resultado');
+  if (!deEl || !ateEl || !out) return;
+
+  const deVal = deEl.value, ateVal = ateEl.value;
+  if (!deVal || !ateVal) { out.innerHTML = '<p style="color:var(--muted);font-size:13px">Selecione as duas datas.</p>'; return; }
+
+  const toDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
+  const de = toDate(deVal), ate = toDate(ateVal);
+  if (de > ate) { out.innerHTML = '<p style="color:#ef4444;font-size:13px">Data De deve ser anterior a Ate.</p>'; return; }
+
+  const daily = RAW.daily_combined || {};
+  const fmt  = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtN = v => (v||0).toLocaleString('pt-BR');
+
+  const CANAIS = [
+    { key:'salao',  cup:'salao_cups',  label:'Salao'   },
+    { key:'ifood',  cup:'ifood_cups',  label:'iFood'   },
+    { key:'food99', cup:'food99_cups', label:'99food'  },
+    { key:'keeta',  cup:'keeta_cups',  label:'Keeta'   },
+  ];
+
+  let totFat = 0, totCups = 0, dias = 0;
+  const ch = {}; CANAIS.forEach(c => { ch[c.key] = {fat:0,cups:0}; });
+
+  Object.entries(daily).forEach(([dateStr, d]) => {
+    if (dateStr.length !== 10) return;
+    const [dd,mm,yyyy] = dateStr.split('/').map(Number);
+    const dt = new Date(yyyy, mm-1, dd);
+    if (dt < de || dt > ate) return;
+    dias++;
+    totFat  += d.total   || 0;
+    totCups += d.coupons || 0;
+    CANAIS.forEach(c => { ch[c.key].fat += d[c.key]||0; ch[c.key].cups += d[c.cup]||0; });
+  });
+
+  if (dias === 0) { out.innerHTML = '<p style="color:var(--muted);font-size:13px">Nenhum dado encontrado para este periodo.</p>'; return; }
+
+  const ticketTotal = totCups ? totFat / totCups : 0;
+  let rows = '';
+  CANAIS.forEach(c => {
+    const f = ch[c.key].fat, n = ch[c.key].cups;
+    if (!f && !n) return;
+    const pct = totFat ? (f/totFat*100).toFixed(1) : '0.0';
+    const tk  = n ? f/n : 0;
+    rows += `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:9px 12px;font-weight:600">${c.label}</td>
+      <td style="padding:9px 12px;text-align:right">${fmt(f)}</td>
+      <td style="padding:9px 12px;text-align:right;color:var(--muted)">${pct}%</td>
+      <td style="padding:9px 12px;text-align:right">${fmtN(n)}</td>
+      <td style="padding:9px 12px;text-align:right;font-weight:700;color:var(--accent)">${fmt(tk)}</td>
+    </tr>`;
+  });
+
+  out.innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+      <div style="background:var(--bg2);border-radius:10px;padding:12px 20px;flex:1;min-width:130px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">FATURAMENTO</div>
+        <div style="font-size:22px;font-weight:800;color:var(--accent)">${fmt(totFat)}</div>
+        <div style="font-size:11px;color:var(--muted)">${dias} dia${dias>1?'s':''} &middot; ${fmt(totFat/dias)}/dia</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:10px;padding:12px 20px;flex:1;min-width:130px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">CUPONS</div>
+        <div style="font-size:22px;font-weight:800;color:#6366f1">${fmtN(totCups)}</div>
+        <div style="font-size:11px;color:var(--muted)">${(totCups/dias).toFixed(1)}/dia</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:10px;padding:12px 20px;flex:1;min-width:130px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">TICKET MEDIO</div>
+        <div style="font-size:22px;font-weight:800;color:#22c55e">${fmt(ticketTotal)}</div>
+        <div style="font-size:11px;color:var(--muted)">faturamento / cupons</div>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:var(--bg2);color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase">
+          <th style="text-align:left;padding:8px 12px">Canal</th>
+          <th style="text-align:right;padding:8px 12px">Faturamento</th>
+          <th style="text-align:right;padding:8px 12px">Part. %</th>
+          <th style="text-align:right;padding:8px 12px">Cupons</th>
+          <th style="text-align:right;padding:8px 12px">Ticket Medio</th>
+        </tr></thead>
+        <tbody>${rows}
+          <tr style="border-top:2px solid var(--border);font-weight:700;background:var(--bg2)">
+            <td style="padding:10px 12px">TOTAL</td>
+            <td style="padding:10px 12px;text-align:right">${fmt(totFat)}</td>
+            <td style="padding:10px 12px;text-align:right;color:var(--muted)">100%</td>
+            <td style="padding:10px 12px;text-align:right">${fmtN(totCups)}</td>
+            <td style="padding:10px 12px;text-align:right;color:#22c55e">${fmt(ticketTotal)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
 </script>
 
 <script>
