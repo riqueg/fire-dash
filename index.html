@@ -2791,6 +2791,13 @@
   </div>
 </div>
 
+<!-- ── SEMANAS DO MÊS ─────────────────────────────────────────────── -->
+<div class="card" style="margin-top:16px" id="semanas-card">
+  <div class="card-title" style="margin-bottom:14px">📊 Comparativo por Semana (Ter–Dom)</div>
+  <canvas id="semanasChart" height="110"></canvas>
+  <div id="semanas-resumo" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"></div>
+</div>
+
 <!-- ===== FOLLOW UP ===== -->
 <div class="tab-pane" id="tab-followup">
 
@@ -5377,6 +5384,103 @@ function setChannelPeriod(mode) {
   renderChannels();
 }
 
+let _semanasChart = null;
+
+function buildWeeks(yr, mo) {
+  const daily = RAW.daily_combined || {};
+  const days = [];
+  Object.entries(daily).forEach(([ds, d]) => {
+    if (ds.length !== 10) return;
+    const [dd,mm,yyyy] = ds.split('/').map(Number);
+    if (String(yyyy) !== yr || String(mm).padStart(2,'0') !== mo) return;
+    days.push({ dd, mm, yyyy, date: new Date(yyyy, mm-1, dd), ...d });
+  });
+  days.sort((a,b) => a.date - b.date);
+  const weeks = [];
+  let cur = null;
+  days.forEach(d => {
+    const dow = d.date.getDay(); // 0=Dom,1=Seg,2=Ter,...,6=Sáb
+    if (dow === 2 || !cur) {
+      if (cur) weeks.push(cur);
+      cur = { days:[], salao:0, ifood:0, food99:0, keeta:0, total:0, cups:0 };
+    }
+    cur.days.push(d);
+    cur.salao   += d.salao   || 0;
+    cur.ifood   += d.ifood   || 0;
+    cur.food99  += d.food99  || 0;
+    cur.keeta   += d.keeta   || 0;
+    cur.total   += d.total   || 0;
+    cur.cups    += d.coupons || 0;
+  });
+  if (cur) weeks.push(cur);
+  weeks.forEach((w,i) => {
+    const f = w.days[0], l = w.days[w.days.length-1];
+    w.label = `${String(f.dd).padStart(2,'0')}/${String(f.mm).padStart(2,'0')} – ${String(l.dd).padStart(2,'0')}/${String(l.mm).padStart(2,'0')}`;
+    w.idx = i+1;
+  });
+  return weeks;
+}
+
+function renderSemanasChart() {
+  const canvas = document.getElementById('semanasChart');
+  const resumo = document.getElementById('semanas-resumo');
+  if (!canvas) return;
+
+  const weeks = buildWeeks(activeYear, activeMonth);
+  if (!weeks.length) return;
+
+  if (_semanasChart) { _semanasChart.destroy(); _semanasChart = null; }
+
+  const fmt  = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+  const fmtD = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  const isDark = document.body.classList.contains('dark') || document.documentElement.getAttribute('data-theme')==='dark';
+  const mutedColor  = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()  || '#888';
+  const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#ddd';
+
+  _semanasChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: weeks.map(w => w.label),
+      datasets: [
+        { label: '🪑 Salão',  data: weeks.map(w=>w.salao),  backgroundColor:'#6366f1', stack:'s', borderRadius:3 },
+        { label: '🛵 iFood',  data: weeks.map(w=>w.ifood),  backgroundColor:'#e03a0e', stack:'s', borderRadius:0 },
+        { label: '🟡 99food', data: weeks.map(w=>w.food99), backgroundColor:'#f59e0b', stack:'s', borderRadius:0 },
+        { label: '🔵 Keeta',  data: weeks.map(w=>w.keeta),  backgroundColor:'#22c55e', stack:'s', borderRadius:3 },
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins: {
+        legend: { position:'bottom', labels:{ color: mutedColor, font:{size:11}, padding:12 } },
+        tooltip: {
+          callbacks: {
+            afterBody: (items) => {
+              const wi = items[0].dataIndex, w = weeks[wi];
+              return [`─────────────────`, `Total: ${fmt(w.total)}`, `Cupons: ${w.cups}  ·  Ticket: ${fmtD(w.cups?w.total/w.cups:0)}`];
+            }
+          }
+        },
+        datalabels: { display: false }
+      },
+      scales: {
+        x: { stacked:true, ticks:{ color: mutedColor, font:{size:11} }, grid:{ display:false } },
+        y: { stacked:true, ticks:{ color: mutedColor, font:{size:11}, callback: v => 'R$'+(v/1000).toFixed(0)+'k' }, grid:{ color: borderColor } }
+      }
+    }
+  });
+
+  // Mini summary chips
+  if (resumo) {
+    resumo.innerHTML = weeks.map(w => `
+      <div style="background:var(--bg2);border-radius:8px;padding:8px 14px;flex:1;min-width:140px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;margin-bottom:3px">SEM. ${w.idx} · ${w.label}</div>
+        <div style="font-size:16px;font-weight:800;color:var(--accent)">${fmt(w.total)}</div>
+        <div style="font-size:10px;color:var(--muted)">${w.cups} cupons · ${fmtD(w.cups?w.total/w.cups:0)}/ticket</div>
+      </div>`).join('');
+  }
+}
+
 function renderPeriodoResumo() {
   const deEl  = document.getElementById('periodo-de');
   const ateEl = document.getElementById('periodo-ate');
@@ -5886,6 +5990,7 @@ function renderChannels() {
 
   // Table
   document.getElementById('channelTableBody').innerHTML = tableRows.join('');
+  renderSemanasChart();
 }
 
 // ============================================================
@@ -9663,6 +9768,7 @@ function renderChannels() {
 
   // Table
   document.getElementById('channelTableBody').innerHTML = tableRows.join('');
+  renderSemanasChart();
 }
 
 // ============================================================
