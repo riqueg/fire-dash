@@ -653,8 +653,22 @@
 
   <!-- ===== BURGER QTY TOTAL ===== -->
   <div class="card" id="burger-qty-card">
-    <div class="card-title">
+    <div class="card-title" style="flex-wrap:wrap;gap:8px">
       <span>🍔 Quantidade Total Vendida — Burger (com promos)</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button id="bqt-btn-mensal" onclick="setBqtMode('mensal')" class="filter-select" style="padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:6px">Por Mês</button>
+        <button id="bqt-btn-periodo" onclick="setBqtMode('periodo')" class="filter-select" style="padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:6px">Por Período</button>
+        <span id="bqt-period-wrap" style="display:none;align-items:center;gap:6px">
+          <input type="date" id="bqt-de" class="filter-select" style="padding:5px 8px;font-size:11px">
+          <span class="filter-label">até</span>
+          <input type="date" id="bqt-ate" class="filter-select" style="padding:5px 8px;font-size:11px">
+          <select id="bqt-agrup" class="filter-select" onchange="renderBurgerQtyChart()" style="padding:5px 8px;font-size:11px">
+            <option value="dia">Por Dia</option>
+            <option value="semana">Por Semana</option>
+          </select>
+          <button onclick="renderBurgerQtyChart()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">Ver</button>
+        </span>
+      </div>
     </div>
     <div class="chart-wrap" style="height:300px"><canvas id="burgerQtyChart"></canvas></div>
   </div>
@@ -4537,21 +4551,128 @@ function buildAuvMonthlyTotals() {
 }
 
 
+let _bqtMode = 'mensal';
+function setBqtMode(mode) {
+  _bqtMode = mode;
+  const btnM = document.getElementById('bqt-btn-mensal');
+  const btnP = document.getElementById('bqt-btn-periodo');
+  const wrap = document.getElementById('bqt-period-wrap');
+  if (btnM) { btnM.style.background = mode==='mensal' ? 'var(--accent)' : 'var(--bg2)'; btnM.style.color = mode==='mensal' ? '#fff' : 'var(--text)'; btnM.style.border = mode==='mensal' ? 'none' : '1px solid var(--border)'; }
+  if (btnP) { btnP.style.background = mode==='periodo' ? 'var(--accent)' : 'var(--bg2)'; btnP.style.color = mode==='periodo' ? '#fff' : 'var(--text)'; btnP.style.border = mode==='periodo' ? 'none' : '1px solid var(--border)'; }
+  if (wrap) wrap.style.display = mode==='periodo' ? 'flex' : 'none';
+  renderBurgerQtyChart();
+}
+
 function renderBurgerQtyChart() {
   const el = document.getElementById('burgerQtyChart');
   if (!el) return;
   destroyChart('burgerQtyChart');
-  const labels = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul'];
-  const data   = [2326, 2533, 3090, 2659, 2881, 2705, 1735];
+
+  const MO_LABELS = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const BQ_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':3085};
+  const yr = activeYear;
+
+  let labels = [], data = [], title = 'Qtd Burger';
+
+  if (_bqtMode === 'mensal') {
+    // Monthly view — use corrected BQ for 2026, products for other years
+    if (yr === '2026') {
+      Object.entries(BQ_2026).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([m, qty]) => {
+        labels.push(MO_LABELS[parseInt(m)]);
+        data.push(qty);
+      });
+    } else {
+      const months = getAvailableMonths ? getAvailableMonths() : [];
+      months.forEach(m => {
+        let qty = 0;
+        Object.entries(getProducts()).forEach(([name, p]) => {
+          if (displayCat(p.cat, name) !== 'Burger') return;
+          Object.entries(p.dates||{}).forEach(([d, q]) => {
+            const mm = d.includes('/') ? d.split('/')[1] : d;
+            const yy = d.split('/').length > 2 ? d.split('/')[2] : yr;
+            if (mm === m && String(yy) === yr) qty += q;
+          });
+        });
+        labels.push(MO_LABELS[parseInt(m)]);
+        data.push(qty);
+      });
+    }
+    title = `Qtd Burger ${yr}`;
+  } else {
+    // Period view — aggregate from RAW.products.dates
+    const deVal  = (document.getElementById('bqt-de')  || {}).value;
+    const ateVal = (document.getElementById('bqt-ate') || {}).value;
+    const agrup  = ((document.getElementById('bqt-agrup') || {}).value) || 'dia';
+
+    if (!deVal || !ateVal) {
+      // Default: current month daily
+      const now = new Date();
+      const mo  = String(now.getMonth()+1).padStart(2,'0');
+      const y   = String(now.getFullYear());
+      const deEl = document.getElementById('bqt-de'), ateEl = document.getElementById('bqt-ate');
+      if (deEl && !deEl.value) deEl.value = `${y}-${mo}-01`;
+      if (ateEl && !ateEl.value) ateEl.value = `${y}-${mo}-${String(now.getDate()).padStart(2,'0')}`;
+      renderBurgerQtyChart(); return;
+    }
+
+    const toDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
+    const de = toDate(deVal), ate = toDate(ateVal);
+
+    // Aggregate burger qty from RAW.products.dates (DD/MM/YYYY keys)
+    const dayMap = {}; // 'DD/MM/YYYY' -> qty
+    Object.entries(getProducts()).forEach(([name, p]) => {
+      if (displayCat(p.cat, name) !== 'Burger') return;
+      Object.entries(p.dates||{}).forEach(([d, q]) => {
+        if (d.length !== 10) return;
+        const [dd,mm,yyyy] = d.split('/').map(Number);
+        const dt = new Date(yyyy,mm-1,dd);
+        if (dt < de || dt > ate) return;
+        dayMap[d] = (dayMap[d]||0) + q;
+      });
+    });
+
+    const sortedDays = Object.entries(dayMap).sort((a,b)=>{
+      const [da,ma,ya]=a[0].split('/').map(Number), [db,mb,yb]=b[0].split('/').map(Number);
+      return new Date(ya,ma-1,da) - new Date(yb,mb-1,db);
+    });
+
+    if (agrup === 'dia') {
+      sortedDays.forEach(([d, q]) => { labels.push(d.slice(0,5)); data.push(q); });
+      title = 'Qtd Burger por Dia';
+    } else {
+      // Group Tue-Sun weeks
+      const weeks = {};
+      sortedDays.forEach(([d, q]) => {
+        const [dd,mm,yyyy]=d.split('/').map(Number);
+        const dt = new Date(yyyy,mm-1,dd);
+        // Find week start (previous Tuesday or same if Tuesday)
+        let wStart = new Date(dt);
+        const dow = dt.getDay(); // 0=Sun,1=Mon,2=Tue
+        const daysBack = dow === 2 ? 0 : dow < 2 ? dow+5 : dow-2;
+        wStart.setDate(wStart.getDate() - daysBack);
+        const wKey = `${String(wStart.getDate()).padStart(2,'0')}/${String(wStart.getMonth()+1).padStart(2,'0')}`;
+        weeks[wKey] = (weeks[wKey]||0) + q;
+      });
+      Object.entries(weeks).sort().forEach(([wk, q]) => { labels.push('Sem ' + wk); data.push(q); });
+      title = 'Qtd Burger por Semana';
+    }
+  }
+
+  const barColor = data.map((v,i) => {
+    if (data.length <= 1) return 'rgba(224,58,14,0.85)';
+    const max = Math.max(...data);
+    return v === max ? 'rgba(224,58,14,1)' : 'rgba(224,58,14,0.72)';
+  });
+
   charts['burgerQtyChart'] = new Chart(el, {
     type: 'bar',
     data: { labels, datasets: [{
-      label: 'Qtd Burger',
+      label: title,
       data,
-      backgroundColor: 'rgba(224,58,14,0.85)',
+      backgroundColor: barColor,
       borderRadius: 6,
-      barPercentage: 0.6,
-      categoryPercentage: 0.75
+      barPercentage: data.length > 10 ? 0.85 : 0.6,
+      categoryPercentage: 0.8
     }]},
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -4560,16 +4681,16 @@ function renderBurgerQtyChart() {
         legend: { display: false },
         tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString('pt-BR')} lanches` } },
         datalabels: {
-          display: true,
+          display: data.length <= 20,
           formatter: v => v.toLocaleString('pt-BR'),
           anchor: 'end', align: 'top', offset: 4,
-          color: '#1a1a2e', font: { size: 12, weight: '800' },
+          color: '#1a1a2e', font: { size: data.length > 10 ? 10 : 12, weight: '800' },
           backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: 4,
           padding: { top: 2, bottom: 2, left: 5, right: 5 }
         }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 13, weight: '600' } } },
+        x: { grid: { display: false }, ticks: { font: { size: data.length > 10 ? 10 : 13, weight: '600' }, maxRotation: data.length > 10 ? 45 : 0 } },
         y: { display: false }
       }
     },
