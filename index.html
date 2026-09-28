@@ -2776,6 +2776,19 @@
       </table>
     </div>
   </div>
+
+  <!-- ── RESUMO POR PERÍODO ─────────────────────────────────────────── -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" style="margin-bottom:14px">📅 Resumo por Período</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <span class="filter-label">De:</span>
+      <input type="date" id="periodo-de" class="filter-select" style="padding:6px 10px;font-size:13px">
+      <span class="filter-label">Até:</span>
+      <input type="date" id="periodo-ate" class="filter-select" style="padding:6px 10px;font-size:13px">
+      <button onclick="renderPeriodoResumo()" style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">Ver</button>
+    </div>
+    <div id="periodo-resultado"></div>
+  </div>
 </div>
 
 <!-- ===== FOLLOW UP ===== -->
@@ -5362,6 +5375,106 @@ function setChannelPeriod(mode) {
   document.getElementById('ch-btn-week').classList.toggle('active', mode === 'week');
   document.getElementById('ch-month-wrap').style.display = mode === 'month' ? 'flex' : 'none';
   renderChannels();
+}
+
+function renderPeriodoResumo() {
+  const deEl  = document.getElementById('periodo-de');
+  const ateEl = document.getElementById('periodo-ate');
+  const out   = document.getElementById('periodo-resultado');
+  if (!deEl || !ateEl || !out) return;
+
+  const deVal = deEl.value, ateVal = ateEl.value;
+  if (!deVal || !ateVal) { out.innerHTML = '<p style="color:var(--muted);font-size:13px">Selecione as duas datas.</p>'; return; }
+
+  const toDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
+  const de = toDate(deVal), ate = toDate(ateVal);
+  if (de > ate) { out.innerHTML = '<p style="color:#ef4444;font-size:13px">Data \"De\" deve ser anterior à \"Até\".</p>'; return; }
+
+  const daily = RAW.daily_combined || {};
+  const fmt  = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtN = v => (v||0).toLocaleString('pt-BR');
+
+  const CANAIS = [
+    { key:'salao',  cup:'salao_cups',  label:'\u{1FA91} Salão'  },
+    { key:'ifood',  cup:'ifood_cups',  label:'\u{1F6F5} iFood'  },
+    { key:'food99', cup:'food99_cups', label:'\u{1F7E1} 99food' },
+    { key:'keeta',  cup:'keeta_cups',  label:'\u{1F535} Keeta'  },
+  ];
+
+  let totFat = 0, totCups = 0, dias = 0;
+  const ch = {}; CANAIS.forEach(c => { ch[c.key] = {fat:0,cups:0}; });
+
+  Object.entries(daily).forEach(([dateStr, d]) => {
+    if (dateStr.length !== 10) return;
+    const [dd,mm,yyyy] = dateStr.split('/').map(Number);
+    const dt = new Date(yyyy, mm-1, dd);
+    if (dt < de || dt > ate) return;
+    dias++;
+    totFat  += d.total   || 0;
+    totCups += d.coupons || 0;
+    CANAIS.forEach(c => { ch[c.key].fat += d[c.key]||0; ch[c.key].cups += d[c.cup]||0; });
+  });
+
+  if (dias === 0) { out.innerHTML = '<p style="color:var(--muted);font-size:13px">Nenhum dado encontrado para este período.</p>'; return; }
+
+  const ticketTotal = totCups ? totFat / totCups : 0;
+
+  let rows = '';
+  CANAIS.forEach(c => {
+    const f = ch[c.key].fat, n = ch[c.key].cups;
+    if (!f && !n) return;
+    const pct = totFat ? (f/totFat*100).toFixed(1) : '0.0';
+    const tk  = n ? f/n : 0;
+    rows += `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:9px 12px;font-weight:600">${c.label}</td>
+      <td style="padding:9px 12px;text-align:right">${fmt(f)}</td>
+      <td style="padding:9px 12px;text-align:right;color:var(--muted)">${pct}%</td>
+      <td style="padding:9px 12px;text-align:right">${fmtN(n)}</td>
+      <td style="padding:9px 12px;text-align:right;font-weight:700;color:var(--accent)">${fmt(tk)}</td>
+    </tr>`;
+  });
+
+  out.innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+      <div style="background:var(--bg2);border-radius:10px;padding:12px 20px;flex:1;min-width:130px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">FATURAMENTO</div>
+        <div style="font-size:22px;font-weight:800;color:var(--accent)">${fmt(totFat)}</div>
+        <div style="font-size:11px;color:var(--muted)">${dias} dia${dias>1?'s':''} · ${fmt(totFat/dias)}/dia</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:10px;padding:12px 20px;flex:1;min-width:130px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">CUPONS</div>
+        <div style="font-size:22px;font-weight:800;color:#6366f1">${fmtN(totCups)}</div>
+        <div style="font-size:11px;color:var(--muted)">${(totCups/dias).toFixed(1)}/dia</div>
+      </div>
+      <div style="background:var(--bg2);border-radius:10px;padding:12px 20px;flex:1;min-width:130px;text-align:center">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">TICKET MÉDIO</div>
+        <div style="font-size:22px;font-weight:800;color:#22c55e">${fmt(ticketTotal)}</div>
+        <div style="font-size:11px;color:var(--muted)">faturamento ÷ cupons</div>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:var(--bg2);color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase">
+            <th style="text-align:left;padding:8px 12px;border-radius:6px 0 0 6px">Canal</th>
+            <th style="text-align:right;padding:8px 12px">Faturamento</th>
+            <th style="text-align:right;padding:8px 12px">Part.%</th>
+            <th style="text-align:right;padding:8px 12px">Cupons</th>
+            <th style="text-align:right;padding:8px 12px;border-radius:0 6px 6px 0">Ticket Médio</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+          <tr style="border-top:2px solid var(--border);font-weight:700;background:var(--bg2)">
+            <td style="padding:10px 12px;border-radius:6px 0 0 6px">TOTAL</td>
+            <td style="padding:10px 12px;text-align:right">${fmt(totFat)}</td>
+            <td style="padding:10px 12px;text-align:right;color:var(--muted)">100%</td>
+            <td style="padding:10px 12px;text-align:right">${fmtN(totCups)}</td>
+            <td style="padding:10px 12px;text-align:right;color:#22c55e;border-radius:0 6px 6px 0">${fmt(ticketTotal)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
 }
 
 function renderChannels() {
