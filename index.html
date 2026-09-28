@@ -4622,16 +4622,13 @@ function renderBurgerQtyChart() {
     }
     title = `Qtd Burger ${yr}`;
   } else {
-    // Period view — aggregate from RAW.products.dates
+    // Period view — estimate daily burger qty from daily_combined + monthly BQ correction
     const deVal  = (document.getElementById('bqt-de')  || {}).value;
     const ateVal = (document.getElementById('bqt-ate') || {}).value;
-    const agrup  = ((document.getElementById('bqt-agrup') || {}).value) || 'dia';
+    const agrup  = ((document.getElementById('bqt-agrup') || {}).value) || 'semana';
 
     if (!deVal || !ateVal) {
-      // Default: current month daily
-      const now = new Date();
-      const mo  = String(now.getMonth()+1).padStart(2,'0');
-      const y   = String(now.getFullYear());
+      const now = new Date(); const mo = String(now.getMonth()+1).padStart(2,'0'); const y = String(now.getFullYear());
       const deEl = document.getElementById('bqt-de'), ateEl = document.getElementById('bqt-ate');
       if (deEl && !deEl.value) deEl.value = `${y}-${mo}-01`;
       if (ateEl && !ateEl.value) ateEl.value = `${y}-${mo}-${String(now.getDate()).padStart(2,'0')}`;
@@ -4641,43 +4638,61 @@ function renderBurgerQtyChart() {
     const toDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); };
     const de = toDate(deVal), ate = toDate(ateVal);
 
-    // Aggregate burger qty from RAW.products.dates (DD/MM/YYYY keys)
-    const dayMap = {}; // 'DD/MM/YYYY' -> qty
-    Object.entries(getProducts()).forEach(([name, p]) => {
-      if (displayCat(p.cat, name) !== 'Burger') return;
-      Object.entries(p.dates||{}).forEach(([d, q]) => {
-        if (d.length !== 10) return;
-        const [dd,mm,yyyy] = d.split('/').map(Number);
-        const dt = new Date(yyyy,mm-1,dd);
-        if (dt < de || dt > ate) return;
-        dayMap[d] = (dayMap[d]||0) + q;
-      });
+    // Build daily burger estimate from daily_combined proportion × monthly BQ
+    const BQ_2026 = {'01':2326,'02':2533,'03':3090,'04':2659,'05':2881,'06':2705,'07':2682,'08':3488,'09':3085};
+    const rm = getRM ? getRM() : (RAW.real_monthly || {});
+    const daily = RAW.daily_combined || {};
+
+    // Collect daily entries in range
+    const dayEntries = []; // {dateStr, dd, mm, yyyy, dt, fat}
+    Object.entries(daily).forEach(([ds, d]) => {
+      if (ds.length !== 10) return;
+      const [dd,mm,yyyy] = ds.split('/').map(Number);
+      const dt = new Date(yyyy,mm-1,dd);
+      if (dt < de || dt > ate) return;
+      dayEntries.push({ ds, dd, mm, yyyy, dt, fat: d.total||0 });
+    });
+    dayEntries.sort((a,b) => a.dt - b.dt);
+
+    // For each month in range, compute revenue-based daily BQ estimate
+    const monthFat = {}; // 'MM/YYYY' -> total fat in range for that month
+    dayEntries.forEach(e => {
+      const k = `${String(e.mm).padStart(2,'0')}/${e.yyyy}`;
+      monthFat[k] = (monthFat[k]||0) + e.fat;
     });
 
-    const sortedDays = Object.entries(dayMap).sort((a,b)=>{
-      const [da,ma,ya]=a[0].split('/').map(Number), [db,mb,yb]=b[0].split('/').map(Number);
-      return new Date(ya,ma-1,da) - new Date(yb,mb-1,db);
+    const dayBQ = {}; // ds -> estimated burger qty
+    dayEntries.forEach(e => {
+      const mo2 = String(e.mm).padStart(2,'0');
+      const bq = e.yyyy === 2026 ? (BQ_2026[mo2]||0) : ((rm[mo2]||{})._bq||0);
+      const mKey = `${mo2}/${e.yyyy}`;
+      const mFat = monthFat[mKey] || 1;
+      // Estimate this day's share = day_fat / month_fat_in_range × monthly_BQ
+      // Use rm[mo].total as full month denominator if available
+      const fullMonthFat = (rm[mo2]||{}).total || mFat;
+      dayBQ[e.ds] = Math.round(bq * (e.fat / fullMonthFat));
     });
 
     if (agrup === 'dia') {
-      sortedDays.forEach(([d, q]) => { labels.push(d.slice(0,5)); data.push(q); });
-      title = 'Qtd Burger por Dia';
-    } else {
-      // Group Tue-Sun weeks
-      const weeks = {};
-      sortedDays.forEach(([d, q]) => {
-        const [dd,mm,yyyy]=d.split('/').map(Number);
-        const dt = new Date(yyyy,mm-1,dd);
-        // Find week start (previous Tuesday or same if Tuesday)
-        let wStart = new Date(dt);
-        const dow = dt.getDay(); // 0=Sun,1=Mon,2=Tue
-        const daysBack = dow === 2 ? 0 : dow < 2 ? dow+5 : dow-2;
-        wStart.setDate(wStart.getDate() - daysBack);
-        const wKey = `${String(wStart.getDate()).padStart(2,'0')}/${String(wStart.getMonth()+1).padStart(2,'0')}`;
-        weeks[wKey] = (weeks[wKey]||0) + q;
+      dayEntries.forEach(e => {
+        labels.push(`${String(e.dd).padStart(2,'0')}/${String(e.mm).padStart(2,'0')}`);
+        data.push(dayBQ[e.ds] || 0);
       });
-      Object.entries(weeks).sort().forEach(([wk, q]) => { labels.push('Sem ' + wk); data.push(q); });
-      title = 'Qtd Burger por Semana';
+      title = 'Qtd Burger/Dia (estimado)';
+    } else {
+      // Group Ter-Dom weeks
+      const weeksMap = {};
+      const weekOrder = [];
+      dayEntries.forEach(e => {
+        const dow = e.dt.getDay();
+        const daysBack = dow === 2 ? 0 : dow < 2 ? dow+5 : dow-2;
+        const wStart = new Date(e.dt); wStart.setDate(wStart.getDate()-daysBack);
+        const wKey = `${String(wStart.getDate()).padStart(2,'0')}/${String(wStart.getMonth()+1).padStart(2,'0')}`;
+        if (!weeksMap[wKey]) { weeksMap[wKey] = 0; weekOrder.push(wKey); }
+        weeksMap[wKey] += dayBQ[e.ds] || 0;
+      });
+      weekOrder.forEach(wk => { labels.push('Sem '+wk); data.push(weeksMap[wk]); });
+      title = 'Qtd Burger por Semana (estimado)';
     }
   }
 
