@@ -7731,6 +7731,78 @@ function renderFollowup() {
 // ============================================================
 // TAB NAVIGATION
 // ============================================================
+function renderNovosAuv() {
+  if (!window.NOVOS_PRODUTOS_2026 || !NOVOS_PRODUTOS_2026.length) return;
+  const daily = (RAW && RAW.daily_combined) ? RAW.daily_combined : {};
+  // Find earliest launch date across products
+  let launchDate = null;
+  NOVOS_PRODUTOS_2026.forEach(p => {
+    if (p.inicio) {
+      const [dd,mm,yyyy] = p.inicio.split('/').map(Number);
+      const d = new Date(yyyy, mm-1, dd);
+      if (!launchDate || d < launchDate) launchDate = d;
+    }
+  });
+  // Count op days since launch
+  let opDays = 0;
+  Object.keys(daily).forEach(ds => {
+    if (ds.length !== 10) return;
+    const [dd,mm,yyyy] = ds.split('/').map(Number);
+    const d = new Date(yyyy, mm-1, dd);
+    if (launchDate && d >= launchDate) opDays++;
+  });
+  const daysEl = document.getElementById('novos-auv-days-label');
+  if (daysEl) daysEl.textContent = opDays > 0 ? '(' + opDays + ' dias de operação)' : '';
+
+  const labels = NOVOS_PRODUTOS_2026.map(p => p.label);
+  const salaoData = NOVOS_PRODUTOS_2026.map(p => {
+    let tot = 0;
+    Object.values(p.qtd || {}).forEach(mo => tot += (mo.salao || 0));
+    return opDays > 0 ? Math.round(tot / opDays * 10) / 10 : 0;
+  });
+  const delivData = NOVOS_PRODUTOS_2026.map(p => {
+    let tot = 0;
+    Object.values(p.qtd || {}).forEach(mo => tot += (mo.delivery || 0));
+    return opDays > 0 ? Math.round(tot / opDays * 10) / 10 : 0;
+  });
+
+  const canvas = document.getElementById('novosAuvChart');
+  if (!canvas) return;
+  if (canvas._chartInstance) { canvas._chartInstance.destroy(); }
+  try {
+    canvas._chartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'Salão', data: salaoData, backgroundColor: '#4f86f7', stack: 'novos',
+            barPercentage: 0.4, categoryPercentage: 0.6,
+            datalabels: { display: true, color: '#fff', anchor: 'center', align: 'center',
+              font: { size: 12, weight: '700' },
+              formatter: function(v) { return v > 0 ? v.toLocaleString('pt-BR', {minimumFractionDigits:1, maximumFractionDigits:1}) : ''; } } },
+          { label: 'Delivery', data: delivData, backgroundColor: '#e8a838', stack: 'novos',
+            barPercentage: 0.4, categoryPercentage: 0.6,
+            datalabels: { display: true, color: '#1a1a2e', anchor: 'center', align: 'center',
+              font: { size: 12, weight: '700' },
+              formatter: function(v) { return v > 0 ? v.toLocaleString('pt-BR', {minimumFractionDigits:1, maximumFractionDigits:1}) : ''; } } }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { color: 'var(--text)', font: { size: 12 } } },
+          tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits:1, maximumFractionDigits:1}) + ' un/dia'; } } },
+          datalabels: {}
+        },
+        scales: {
+          x: { stacked: true, ticks: { color: 'var(--text)' }, grid: { display: false } },
+          y: { stacked: true, ticks: { color: 'var(--text)' }, grid: { color: 'rgba(128,128,128,0.1)' } }
+        }
+      }
+    });
+  } catch(e) { console.error('renderNovosAuv error:', e); }
+}
+
 function showTab(name) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -7738,7 +7810,7 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 
   if (name === 'overview') { renderOverview(); renderDailyChart(); }
-  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); }
+  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); renderNovosAuv(); }
   else if (name === 'channels') { renderChannels(); renderChannelMix(); }
   else if (name === 'followup') renderFollowup();
   else if (name === 'sss') renderSSS();
@@ -11297,7 +11369,7 @@ function showTab(name) {
   event.currentTarget.classList.add('active');
 
   if (name === 'overview') { renderOverview(); renderDailyChart(); }
-  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); }
+  else if (name === 'mix') { buildChannelMixMonthOptions(); buildChannelMixDayOptions(); renderMixAuv(); renderPromoBreakdown(); renderChannelMix(); renderBurgerQtyChart(); renderNovosAuv(); }
   else if (name === 'channels') { renderChannels(); renderChannelMix(); }
   else if (name === 'followup') renderFollowup();
   else if (name === 'sss') renderSSS();
