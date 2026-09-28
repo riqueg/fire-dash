@@ -3153,13 +3153,13 @@ const CUPONS_MENSAL = {};
 const NOVOS_PRODUTOS_2026 = [
   { id:'trufado',      label:'🍔 Trufado',       categoria:'burger',    cor:'#e03a0e',
     inicio:'23/09/2026',
-    qtd: { '09': { all:72, salao:47, delivery:25 } } },
+    qtd: { '09': { all:133, salao:87, delivery:46 } } },
   { id:'fries_truf',   label:'🍟 Fries Trufada',  categoria:'entrada',   cor:'#f59e0b',
     inicio:'23/09/2026',
-    qtd: { '09': { all:30, salao:16, delivery:14 } } },
+    qtd: { '09': { all:61, salao:33, delivery:28 } } },
   { id:'cookie',       label:'🍪 Cookie',          categoria:'sobremesa', cor:'#a78bfa',
     inicio:'23/09/2026',
-    qtd: { '09': { all:40, salao:28, delivery:12 } } },
+    qtd: { '09': { all:52, salao:36, delivery:16 } } },
 ];
 // ===DASH-DATA-END===
 
@@ -11944,19 +11944,7 @@ function renderNovosAuv() {
           anchor: 'center',
           align: 'center',
         },
-        total: {
-          display: ctx => {
-            return datasets.reduce((s,d) => s+(d.data[ctx.dataIndex]||0), 0) > 0;
-          },
-          formatter: (v, ctx) => {
-            const t = datasets.reduce((s,d) => s+(d.data[ctx.dataIndex]||0), 0);
-            return t > 0 ? t.toFixed(1) : null;
-          },
-          anchor: 'end', align: 'top', offset: 4,
-          color: '#1a1a2e', font: { size: 11, weight: '800' },
-          backgroundColor: 'rgba(255,255,255,0.88)', borderRadius: 4,
-          padding: { top: 2, bottom: 2, left: 5, right: 5 }
-        }
+        total: { display: false }
       }
     };
   }
